@@ -11,6 +11,8 @@ import com.budanga.ordersystem.dto.ProductDTO;
 import com.budanga.ordersystem.dto.UpdateProductDTO;
 import com.budanga.ordersystem.service.ProductService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
@@ -21,12 +23,13 @@ public class ProductController {
     }
 
     @PostMapping
-    public ProductDTO createProduct(@RequestBody CreateProductDTO createDTO) {
+    public ProductDTO createProduct(@Valid @RequestBody CreateProductDTO createDTO) {
         return productService.createProduct(createDTO);
     }
 
     @PutMapping("{id}")
-    public ProductDTO updateProduct(@PathVariable("id") Long productId, @RequestBody UpdateProductDTO updateDTO) {
+    public ProductDTO updateProduct(@PathVariable("id") Long productId,
+            @Valid @RequestBody UpdateProductDTO updateDTO) {
         return productService.updateProduct(productId, updateDTO);
     }
 
