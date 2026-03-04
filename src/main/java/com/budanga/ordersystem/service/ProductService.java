@@ -92,20 +92,20 @@ public class ProductService {
         return mapToDTOList(productRepository.findByPriceGreaterThan(price));
     }
 
-    public List<ProductDTO> getProductsWithStockGreaterThan(Integer stock) {
-        return mapToDTOList(productRepository.findByStockGreaterThan(stock));
-    }
-
     public List<ProductDTO> getProductsWithStockLessThan(Integer stock) {
         return mapToDTOList(productRepository.findByStockLessThan(stock));
     }
 
-    public List<ProductDTO> getProductsCreatedAfter(LocalDateTime date) {
-        return mapToDTOList(productRepository.findByCreatedAtAfter(date));
+    public List<ProductDTO> getProductsWithStockGreaterThan(Integer stock) {
+        return mapToDTOList(productRepository.findByStockGreaterThan(stock));
     }
 
     public List<ProductDTO> getProductsCreatedBefore(LocalDateTime date) {
         return mapToDTOList(productRepository.findByCreatedAtBefore(date));
+    }
+
+    public List<ProductDTO> getProductsCreatedAfter(LocalDateTime date) {
+        return mapToDTOList(productRepository.findByCreatedAtAfter(date));
     }
 
     public List<ProductDTO> getAllProductsOrderByPriceDesc() {

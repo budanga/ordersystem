@@ -17,21 +17,21 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByActiveTrue();
 
-    List<Product> findByPriceGreaterThan(BigDecimal price);
-
     List<Product> findByPriceLessThan(BigDecimal price);
+
+    List<Product> findByPriceGreaterThan(BigDecimal price);
 
     List<Product> findByPriceBetween(BigDecimal min, BigDecimal max);
 
-    List<Product> findByStockGreaterThan(Integer stock);
-
     List<Product> findByStockLessThan(Integer stock);
+
+    List<Product> findByStockGreaterThan(Integer stock);
 
     List<Product> findAllByOrderByPriceDesc();
 
-    List<Product> findByCreatedAtAfter(LocalDateTime date);
-
     List<Product> findByCreatedAtBefore(LocalDateTime date);
+
+    List<Product> findByCreatedAtAfter(LocalDateTime date);
 
     @Query("SELECT COUNT(p) FROM Product p WHERE p.active = true")
     Long countActiveProducts();
