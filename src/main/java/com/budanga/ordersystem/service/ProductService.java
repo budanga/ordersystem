@@ -12,6 +12,7 @@ import com.budanga.ordersystem.dto.CreateProductDTO;
 import com.budanga.ordersystem.dto.ProductDTO;
 import com.budanga.ordersystem.dto.UpdateProductDTO;
 import com.budanga.ordersystem.entity.Product;
+import com.budanga.ordersystem.exception.ResourceNotFoundException;
 import com.budanga.ordersystem.mapper.ProductMapper;
 import com.budanga.ordersystem.repository.ProductRepository;
 
@@ -44,7 +45,7 @@ public class ProductService {
     public ProductDTO updateProduct(Long productId, UpdateProductDTO updateDTO) {
         // Check if the product exists
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
         // Check if the updated name already exists in another product
         if (updateDTO.getName() != null && !updateDTO.getName().equals(product.getName())) {
@@ -66,7 +67,7 @@ public class ProductService {
     public ProductDTO getProductById(Long productId) {
         // Check if the product exists
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
         // Return the product converted to DTO
         return ProductMapper.toDTO(product);

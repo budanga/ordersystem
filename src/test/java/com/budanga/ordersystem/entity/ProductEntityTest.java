@@ -25,7 +25,7 @@ class ProductEntityTest {
     @DisplayName("createdAt is null before prePersist is called")
     void createdAtIsNullBeforePersist() {
         Product product = new Product();
-        assertThat(product.getCreationDate()).isNull();
+        assertThat(product.getCreatedAt()).isNull();
     }
 
     // @PrePersist lifecycle hook
@@ -38,7 +38,7 @@ class ProductEntityTest {
         product.prePersist();
 
         LocalDateTime after = LocalDateTime.now();
-        assertThat(product.getCreationDate())
+        assertThat(product.getCreatedAt())
                 .isAfterOrEqualTo(before)
                 .isBeforeOrEqualTo(after);
     }
@@ -49,7 +49,7 @@ class ProductEntityTest {
         Product product = new Product();
         product.prePersist();
 
-        assertThat(product.getCreationDate())
+        assertThat(product.getCreatedAt())
                 .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.SECONDS));
     }
 
