@@ -5,50 +5,36 @@ import com.budanga.ordersystem.dto.OrderItemDTO;
 import com.budanga.ordersystem.dto.UpdateOrderDTO;
 import com.budanga.ordersystem.entity.Order;
 import com.budanga.ordersystem.entity.OrderItem;
+import org.mapstruct.*;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
-public class OrderMapper {
+/**
+ * MapStruct mapper for Order and OrderItem entities.
+ * The implementation is generated at compile time by MapStruct.
+ */
+@Mapper(componentModel = "spring")
+public interface OrderMapper {
 
-    public static OrderDTO toDTO(Order order) {
-        if (order == null)
-            return null;
+    OrderDTO toDTO(Order order);
 
-        return new OrderDTO(
-                order.getId(),
-                order.getCustomerName(),
-                order.getTotalAmount(),
-                order.getCompleted(),
-                order.getCreatedAt(),
-                order.getOrderItems() != null ? order.getOrderItems().stream()
-                        .map(OrderMapper::toOrderItemDTO)
-                        .collect(Collectors.toList()) : null);
-    }
+    OrderItemDTO toOrderItemDTO(OrderItem item);
 
-    public static OrderItemDTO toOrderItemDTO(OrderItem item) {
-        if (item == null)
-            return null;
+    List<OrderItemDTO> toOrderItemDTOList(List<OrderItem> items);
 
-        return new OrderItemDTO(
-                item.getProductName(),
-                item.getQuantity(),
-                item.getPrice());
-    }
+    List<OrderDTO> toDTOList(List<Order> orders);
 
-    public static OrderItem fromOrderItemDTO(OrderItemDTO dto, Order order) {
-        if (dto == null)
-            return null;
-
-        OrderItem item = new OrderItem();
-        item.setProductName(dto.getProductName());
-        item.setQuantity(dto.getQuantity());
-        item.setPrice(dto.getPrice());
-        item.setOrder(order);
-        return item;
-    }
-
-    public static void updateFromDTO(Order order, UpdateOrderDTO dto) {
-        if (dto.getCompleted() != null)
-            order.setCompleted(dto.getCompleted());
-    }
+    /**
+     * Updates an existing Order entity from an UpdateOrderDTO.
+     * Only non-null values in the DTO will be applied to the target entity.
+     * Other fields in the Order entity are ignored during this update.
+     */
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "customerName", ignore = true)
+    @Mapping(target = "totalAmount", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "orderItems", ignore = true)
+    void updateFromDTO(@MappingTarget Order order, UpdateOrderDTO dto);
 }

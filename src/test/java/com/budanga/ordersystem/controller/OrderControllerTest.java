@@ -124,7 +124,7 @@ class OrderControllerTest {
                     .andExpect(jsonPath("$.customerName").value("Alice"))
                     .andExpect(jsonPath("$.totalAmount").value(20.0))
                     .andExpect(jsonPath("$.completed").value(false))
-                    .andExpect(jsonPath("$.items", hasSize(1)));
+                    .andExpect(jsonPath("$.orderItems", hasSize(1)));
 
             Product updated = productRepository.findByName("Widget").orElseThrow();
             org.assertj.core.api.Assertions.assertThat(updated.getStock()).isEqualTo(3);

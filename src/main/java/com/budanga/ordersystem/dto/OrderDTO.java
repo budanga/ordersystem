@@ -30,5 +30,5 @@ public class OrderDTO {
     private LocalDateTime createdAt;
 
     @Schema(description = "List of items included in the order")
-    private List<OrderItemDTO> items;
+    private List<OrderItemDTO> orderItems;
 }

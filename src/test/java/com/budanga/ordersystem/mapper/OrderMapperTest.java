@@ -15,8 +15,12 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.mapstruct.factory.Mappers;
+
 @DisplayName("OrderMapper (unit)")
 class OrderMapperTest {
+
+    private final OrderMapper mapper = Mappers.getMapper(OrderMapper.class);
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -50,7 +54,7 @@ class OrderMapperTest {
         void mapsAllFields() {
             Order order = makeOrder(1L, "Alice", new BigDecimal("99.99"), false);
 
-            OrderDTO dto = OrderMapper.toDTO(order);
+            OrderDTO dto = mapper.toDTO(order);
 
             assertThat(dto.getId()).isEqualTo(1L);
             assertThat(dto.getCustomerName()).isEqualTo("Alice");
@@ -67,10 +71,10 @@ class OrderMapperTest {
             item.setOrder(order);
             order.setOrderItems(List.of(item));
 
-            OrderDTO dto = OrderMapper.toDTO(order);
+            OrderDTO dto = mapper.toDTO(order);
 
-            assertThat(dto.getItems()).hasSize(1);
-            OrderItemDTO itemDTO = dto.getItems().get(0);
+            assertThat(dto.getOrderItems()).hasSize(1);
+            OrderItemDTO itemDTO = dto.getOrderItems().get(0);
             assertThat(itemDTO.getProductName()).isEqualTo("Widget");
             assertThat(itemDTO.getQuantity()).isEqualTo(2);
             assertThat(itemDTO.getPrice()).isEqualByComparingTo("5.00");
@@ -81,15 +85,15 @@ class OrderMapperTest {
         void emptyItems() {
             Order order = makeOrder(1L, "Carol", BigDecimal.ONE, true);
 
-            OrderDTO dto = OrderMapper.toDTO(order);
+            OrderDTO dto = mapper.toDTO(order);
 
-            assertThat(dto.getItems()).isEmpty();
+            assertThat(dto.getOrderItems()).isEmpty();
         }
 
         @Test
         @DisplayName("returns null when order is null")
         void nullOrder() {
-            assertThat(OrderMapper.toDTO(null)).isNull();
+            assertThat(mapper.toDTO(null)).isNull();
         }
     }
 
@@ -104,7 +108,7 @@ class OrderMapperTest {
         void mapsAllFields() {
             OrderItem item = makeItem("Gadget", 3, new BigDecimal("12.50"));
 
-            OrderItemDTO dto = OrderMapper.toOrderItemDTO(item);
+            OrderItemDTO dto = mapper.toOrderItemDTO(item);
 
             assertThat(dto.getProductName()).isEqualTo("Gadget");
             assertThat(dto.getQuantity()).isEqualTo(3);
@@ -114,7 +118,7 @@ class OrderMapperTest {
         @Test
         @DisplayName("returns null when item is null")
         void nullItem() {
-            assertThat(OrderMapper.toOrderItemDTO(null)).isNull();
+            assertThat(mapper.toOrderItemDTO(null)).isNull();
         }
     }
 
@@ -130,7 +134,7 @@ class OrderMapperTest {
             Order order = makeOrder(1L, "Alice", BigDecimal.TEN, false);
             UpdateOrderDTO dto = new UpdateOrderDTO(true);
 
-            OrderMapper.updateFromDTO(order, dto);
+            mapper.updateFromDTO(order, dto);
 
             assertThat(order.getCompleted()).isTrue();
         }
@@ -141,7 +145,7 @@ class OrderMapperTest {
             Order order = makeOrder(1L, "Alice", BigDecimal.TEN, true);
             UpdateOrderDTO dto = new UpdateOrderDTO(false);
 
-            OrderMapper.updateFromDTO(order, dto);
+            mapper.updateFromDTO(order, dto);
 
             assertThat(order.getCompleted()).isFalse();
         }
@@ -152,7 +156,7 @@ class OrderMapperTest {
             Order order = makeOrder(1L, "Alice", BigDecimal.TEN, true);
             UpdateOrderDTO dto = new UpdateOrderDTO(null);
 
-            OrderMapper.updateFromDTO(order, dto);
+            mapper.updateFromDTO(order, dto);
 
             assertThat(order.getCompleted()).isTrue();
         }

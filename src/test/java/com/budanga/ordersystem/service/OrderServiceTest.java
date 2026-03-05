@@ -43,8 +43,15 @@ class OrderServiceTest {
     @Mock
     private ProductRepository productRepository;
 
-    @InjectMocks
     private OrderService orderService;
+
+    private final com.budanga.ordersystem.mapper.OrderMapper orderMapper = org.mapstruct.factory.Mappers
+            .getMapper(com.budanga.ordersystem.mapper.OrderMapper.class);
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        orderService = new OrderService(orderRepository, productRepository, orderMapper);
+    }
 
     // ─── Helpers ────────────────────────────────────────────────────────────
 

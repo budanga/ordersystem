@@ -27,10 +27,12 @@ import jakarta.transaction.Transactional;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final OrderMapper orderMapper;
 
-    public OrderService(OrderRepository orderRepository, ProductRepository productRepository) {
+    public OrderService(OrderRepository orderRepository, ProductRepository productRepository, OrderMapper orderMapper) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.orderMapper = orderMapper;
     }
 
     @Transactional
@@ -69,7 +71,7 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        return OrderMapper.toDTO(savedOrder);
+        return orderMapper.toDTO(savedOrder);
     }
 
     public OrderDTO updateOrder(Long orderId, UpdateOrderDTO updateDTO) {
@@ -78,13 +80,13 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found."));
 
         // Apply the changes from the DTO to the entity
-        OrderMapper.updateFromDTO(order, updateDTO);
+        orderMapper.updateFromDTO(order, updateDTO);
 
         // Save the updated order to the database
         Order savedOrder = orderRepository.save(order);
 
         // Return the updated order converted to DTO
-        return OrderMapper.toDTO(savedOrder);
+        return orderMapper.toDTO(savedOrder);
     }
 
     public void deleteOrder(Long orderId) {
@@ -92,7 +94,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found."));
 
-        if (order.getCompleted()) {
+        if (order.getCompleted() != null && order.getCompleted()) {
             throw new IllegalStateException("Completed orders cannot be deleted.");
         }
 
@@ -104,61 +106,61 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found."));
 
-        return OrderMapper.toDTO(order);
+        return orderMapper.toDTO(order);
     }
 
     public Page<OrderDTO> getAllOrders(Pageable pageable) {
         Page<Order> orderPage = orderRepository.findAll(pageable);
 
-        return orderPage.map(OrderMapper::toDTO);
+        return orderPage.map(orderMapper::toDTO);
     }
 
     public Page<OrderDTO> getCompletedOrders(Pageable pageable) {
         Page<Order> orderPage = orderRepository.findByCompletedTrue(pageable);
 
-        return orderPage.map(OrderMapper::toDTO);
+        return orderPage.map(orderMapper::toDTO);
     }
 
     public Page<OrderDTO> getUncompletedOrders(Pageable pageable) {
         Page<Order> orderPage = orderRepository.findByCompletedFalse(pageable);
 
-        return orderPage.map(OrderMapper::toDTO);
+        return orderPage.map(orderMapper::toDTO);
     }
 
     public List<OrderDTO> getOrdersByCustomer(String customerName) {
-        return mapToDTOList(orderRepository.findByCustomerName(customerName));
+        return orderMapper.toDTOList(orderRepository.findByCustomerName(customerName));
     }
 
     public List<OrderDTO> getOrdersByTotalAmountLessThan(BigDecimal totalAmount) {
-        return mapToDTOList(orderRepository.findByTotalAmountLessThan(totalAmount));
+        return orderMapper.toDTOList(orderRepository.findByTotalAmountLessThan(totalAmount));
     }
 
     public List<OrderDTO> getOrdersByTotalAmountGreaterThan(BigDecimal totalAmount) {
-        return mapToDTOList(orderRepository.findByTotalAmountGreaterThan(totalAmount));
+        return orderMapper.toDTOList(orderRepository.findByTotalAmountGreaterThan(totalAmount));
     }
 
     public List<OrderDTO> getOrdersByTotalAmountDesc() {
-        return mapToDTOList(orderRepository.findAllByOrderByTotalAmountDesc());
+        return orderMapper.toDTOList(orderRepository.findAllByOrderByTotalAmountDesc());
     }
 
     public List<OrderDTO> getOrdersByTotalAmountAsc() {
-        return mapToDTOList(orderRepository.findAllByOrderByTotalAmountAsc());
+        return orderMapper.toDTOList(orderRepository.findAllByOrderByTotalAmountAsc());
     }
 
     public List<OrderDTO> getOrdersByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
-        return mapToDTOList(orderRepository.findByCreatedAtBetween(start, end));
+        return orderMapper.toDTOList(orderRepository.findByCreatedAtBetween(start, end));
     }
 
     public List<OrderDTO> getOrdersByCreatedAtBefore(LocalDateTime date) {
-        return mapToDTOList(orderRepository.findByCreatedAtBefore(date));
+        return orderMapper.toDTOList(orderRepository.findByCreatedAtBefore(date));
     }
 
     public List<OrderDTO> getOrdersByCreatedAtAfter(LocalDateTime date) {
-        return mapToDTOList(orderRepository.findByCreatedAtAfter(date));
+        return orderMapper.toDTOList(orderRepository.findByCreatedAtAfter(date));
     }
 
     public List<OrderDTO> getOrdersByProductName(String productName) {
-        return mapToDTOList(orderRepository.findByOrderItemsProductNameContaining(productName));
+        return orderMapper.toDTOList(orderRepository.findByOrderItemsProductNameContaining(productName));
     }
 
     public Long countCompletedOrders() {
@@ -189,21 +191,13 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found."));
         order.setCompleted(true);
-        return OrderMapper.toDTO(orderRepository.save(order));
+        return orderMapper.toDTO(orderRepository.save(order));
     }
 
     public OrderDTO markAsUncompleted(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found."));
         order.setCompleted(false);
-        return OrderMapper.toDTO(orderRepository.save(order));
-    }
-
-    private final List<OrderDTO> mapToDTOList(List<Order> orders) {
-        // Convert each order entity to a DTO
-        List<OrderDTO> dtoList = new ArrayList<>();
-        for (Order o : orders)
-            dtoList.add(OrderMapper.toDTO(o));
-        return dtoList;
+        return orderMapper.toDTO(orderRepository.save(order));
     }
 }
