@@ -17,8 +17,6 @@ public class CreateOrderDTO {
     @NotBlank(message = "Customer name cannot be empty")
     private String customerName;
 
-    @NotNull(message = "Total amount is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Total amount must be positive")
     private BigDecimal totalAmount;
 
     @NotEmpty(message = "Order must contain at least one item")

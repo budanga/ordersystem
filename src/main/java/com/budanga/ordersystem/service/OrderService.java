@@ -38,8 +38,6 @@ public class OrderService {
 
         Order order = new Order();
         order.setCustomerName(createDTO.getCustomerName());
-        order.setCompleted(false);
-        order.setCreatedAt(LocalDateTime.now());
 
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
