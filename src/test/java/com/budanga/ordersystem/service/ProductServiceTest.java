@@ -38,7 +38,7 @@ class ProductServiceTest {
     // Shared fixtures
     /** Creates a minimal Product with a fixed id, simulating a persisted entity. */
     private Product buildPersistedProduct(Long id, String name, BigDecimal price,
-            Integer stock, Boolean active, String imageUrl) {
+            Integer stock, String category, Boolean active, String imageUrl) {
         Product p = new Product();
         try {
             var field = Product.class.getDeclaredField("id");
@@ -53,6 +53,7 @@ class ProductServiceTest {
         p.setName(name);
         p.setPrice(price);
         p.setStock(stock);
+        p.setCategory(category);
         p.setActive(active);
         p.setImageUrl(imageUrl);
         return p;
@@ -66,8 +67,10 @@ class ProductServiceTest {
         @Test
         @DisplayName("persists and returns DTO when name is unique")
         void success_whenNameIsUnique() {
-            CreateProductDTO dto = new CreateProductDTO("Laptop", new BigDecimal("999.99"), 10, "laptop.jpg");
-            Product saved = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, true, "laptop.jpg");
+            CreateProductDTO dto = new CreateProductDTO("Laptop", new BigDecimal("999.99"), 10, "Laptops",
+                    "laptop.jpg");
+            Product saved = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, "Laptops", true,
+                    "laptop.jpg");
 
             when(productRepository.findByName("Laptop")).thenReturn(Optional.empty());
             when(productRepository.save(any(Product.class))).thenReturn(saved);
@@ -88,8 +91,8 @@ class ProductServiceTest {
         @Test
         @DisplayName("throws IllegalArgumentException when name already exists")
         void throws_whenNameAlreadyExists() {
-            CreateProductDTO dto = new CreateProductDTO("Laptop", new BigDecimal("999.99"), 10, null);
-            Product existing = buildPersistedProduct(99L, "Laptop", new BigDecimal("500.00"), 5, true, null);
+            CreateProductDTO dto = new CreateProductDTO("Laptop", new BigDecimal("999.99"), 10, "Laptops", null);
+            Product existing = buildPersistedProduct(99L, "Laptop", new BigDecimal("500.00"), 5, "Laptops", true, null);
 
             when(productRepository.findByName("Laptop")).thenReturn(Optional.of(existing));
 
@@ -104,8 +107,9 @@ class ProductServiceTest {
         @Test
         @DisplayName("the product saved has the correct name from the DTO")
         void savedProductHasCorrectName() {
-            CreateProductDTO dto = new CreateProductDTO("Monitor", new BigDecimal("300.00"), 5, null);
-            Product saved = buildPersistedProduct(2L, "Monitor", new BigDecimal("300.00"), 5, true, null);
+            CreateProductDTO dto = new CreateProductDTO("Monitor", new BigDecimal("300.00"), 5, "Electronics", null);
+            Product saved = buildPersistedProduct(2L, "Monitor", new BigDecimal("300.00"), 5, "Electronics", true,
+                    null);
 
             when(productRepository.findByName("Monitor")).thenReturn(Optional.empty());
             when(productRepository.save(any(Product.class))).thenReturn(saved);
@@ -126,10 +130,13 @@ class ProductServiceTest {
         @Test
         @DisplayName("updates and returns DTO when product exists and name is free")
         void success_whenProductExistsAndNameIsFree() {
-            Product existing = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, true, "old.jpg");
+            Product existing = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, "Laptops", true,
+                    "old.jpg");
             UpdateProductDTO updateDTO = new UpdateProductDTO("Laptop Pro", new BigDecimal("1099.99"), 8, true,
+                    "Laptops",
                     "new.jpg");
-            Product updated = buildPersistedProduct(1L, "Laptop Pro", new BigDecimal("1099.99"), 8, true, "new.jpg");
+            Product updated = buildPersistedProduct(1L, "Laptop Pro", new BigDecimal("1099.99"), 8, "Laptops", true,
+                    "new.jpg");
 
             when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
             when(productRepository.findByName("Laptop Pro")).thenReturn(Optional.empty());
@@ -155,9 +162,10 @@ class ProductServiceTest {
         @Test
         @DisplayName("throws when new name conflicts with another product")
         void throws_whenNewNameConflictsWithAnotherProduct() {
-            Product existing = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, true, null);
-            Product conflict = buildPersistedProduct(2L, "Monitor", new BigDecimal("300.00"), 5, true, null);
-            UpdateProductDTO updateDTO = new UpdateProductDTO("Monitor", null, null, null, null);
+            Product existing = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, "Laptops", true, null);
+            Product conflict = buildPersistedProduct(2L, "Monitor", new BigDecimal("300.00"), 5, "Electronics", true,
+                    null);
+            UpdateProductDTO updateDTO = new UpdateProductDTO("Monitor", null, null, null, null, null);
 
             when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
             when(productRepository.findByName("Monitor")).thenReturn(Optional.of(conflict));
@@ -172,8 +180,9 @@ class ProductServiceTest {
         @Test
         @DisplayName("does not check name collision when name is unchanged")
         void doesNotCheckNameCollision_whenNameUnchanged() {
-            Product existing = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, true, null);
-            UpdateProductDTO updateDTO = new UpdateProductDTO("Laptop", new BigDecimal("899.99"), null, null, null);
+            Product existing = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, "Laptops", true, null);
+            UpdateProductDTO updateDTO = new UpdateProductDTO("Laptop", new BigDecimal("899.99"), null, null, null,
+                    null);
 
             when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
             when(productRepository.save(any(Product.class))).thenReturn(existing);
@@ -187,8 +196,8 @@ class ProductServiceTest {
         @Test
         @DisplayName("does not check name collision when name is null in update DTO")
         void doesNotCheckNameCollision_whenNameIsNull() {
-            Product existing = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, true, null);
-            UpdateProductDTO updateDTO = new UpdateProductDTO(null, new BigDecimal("799.99"), null, null, null);
+            Product existing = buildPersistedProduct(1L, "Laptop", new BigDecimal("999.99"), 10, "Laptops", true, null);
+            UpdateProductDTO updateDTO = new UpdateProductDTO(null, new BigDecimal("799.99"), null, null, null, null);
 
             when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
             when(productRepository.save(any(Product.class))).thenReturn(existing);
@@ -207,7 +216,8 @@ class ProductServiceTest {
         @Test
         @DisplayName("returns DTO when product exists")
         void success_whenProductExists() {
-            Product product = buildPersistedProduct(5L, "Keyboard", new BigDecimal("79.99"), 50, true, "key.jpg");
+            Product product = buildPersistedProduct(5L, "Keyboard", new BigDecimal("79.99"), 50, "Electronics", true,
+                    "key.jpg");
             when(productRepository.findById(5L)).thenReturn(Optional.of(product));
 
             ProductDTO result = productService.getProductById(5L);
@@ -232,8 +242,8 @@ class ProductServiceTest {
     @DisplayName("list and filter methods")
     class ListAndFilter {
 
-        private final Product p1 = buildPersistedProduct(1L, "A", new BigDecimal("10.00"), 5, true, "a.jpg");
-        private final Product p2 = buildPersistedProduct(2L, "B", new BigDecimal("20.00"), 3, false, "b.jpg");
+        private final Product p1 = buildPersistedProduct(1L, "A", new BigDecimal("10.00"), 5, "Cat1", true, "a.jpg");
+        private final Product p2 = buildPersistedProduct(2L, "B", new BigDecimal("20.00"), 3, "Cat2", false, "b.jpg");
 
         @Test
         @DisplayName("getAllProducts returns all products as DTOs")

@@ -59,6 +59,7 @@ class OrderServiceTest {
         p.setName(name);
         p.setPrice(price);
         p.setStock(stock);
+        p.setCategory("Default Category");
         p.setActive(true);
         p.setImageUrl(imageUrl);
         return p;
