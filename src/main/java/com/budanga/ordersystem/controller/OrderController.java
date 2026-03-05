@@ -14,10 +14,13 @@ import com.budanga.ordersystem.dto.OrderDTO;
 import com.budanga.ordersystem.dto.UpdateOrderDTO;
 import com.budanga.ordersystem.service.OrderService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/orders")
+@Tag(name = "Orders", description = "Operations related to order management, checkout, and sales statistics")
 public class OrderController {
     private final OrderService orderService;
 
@@ -26,6 +29,7 @@ public class OrderController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a new order", description = "Validates stock, decrements it, and calculates totals.")
     public OrderDTO createOrder(@Valid @RequestBody CreateOrderDTO createDTO) {
         return orderService.createOrder(createDTO);
     }
@@ -46,6 +50,7 @@ public class OrderController {
     }
 
     @GetMapping
+    @Operation(summary = "Get all orders (paginated)", description = "Returns a paginated list of all orders in the system.")
     public Page<OrderDTO> getAllOrders(Pageable pageable) {
         return orderService.getAllOrders(pageable);
     }
@@ -135,6 +140,7 @@ public class OrderController {
     }
 
     @GetMapping("/stats/revenue")
+    @Operation(summary = "Total revenue", description = "Calculates the total sum of all completed orders.")
     public BigDecimal getOrdersTotalRevenue() {
         return orderService.getTotalRevenue();
     }
