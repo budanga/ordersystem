@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,18 +46,18 @@ public class OrderController {
     }
 
     @GetMapping
-    public List<OrderDTO> getAllOrders() {
-        return orderService.getAllOrders();
+    public Page<OrderDTO> getAllOrders(Pageable pageable) {
+        return orderService.getAllOrders(pageable);
     }
 
     @GetMapping("/uncompleted")
-    public List<OrderDTO> getUncompletedOrders() {
-        return orderService.getUncompletedOrders();
+    public Page<OrderDTO> getUncompletedOrders(Pageable pageable) {
+        return orderService.getUncompletedOrders(pageable);
     }
 
     @GetMapping("/completed")
-    public List<OrderDTO> getCompletedOrders() {
-        return orderService.getCompletedOrders();
+    public Page<OrderDTO> getCompletedOrders(Pageable pageable) {
+        return orderService.getCompletedOrders(pageable);
     }
 
     @GetMapping("/customer")

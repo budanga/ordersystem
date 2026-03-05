@@ -5,32 +5,71 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.budanga.ordersystem.dto.CreateOrderDTO;
 import com.budanga.ordersystem.dto.OrderDTO;
+import com.budanga.ordersystem.dto.OrderItemDTO;
 import com.budanga.ordersystem.dto.UpdateOrderDTO;
 import com.budanga.ordersystem.entity.Order;
+import com.budanga.ordersystem.entity.OrderItem;
+import com.budanga.ordersystem.entity.Product;
 import com.budanga.ordersystem.exception.ResourceNotFoundException;
 import com.budanga.ordersystem.mapper.OrderMapper;
 import com.budanga.ordersystem.repository.OrderRepository;
+import com.budanga.ordersystem.repository.ProductRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(OrderRepository orderRepository, ProductRepository productRepository) {
         this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
     }
 
+    @Transactional
     public OrderDTO createOrder(CreateOrderDTO createDTO) {
-        // Convert the DTO to an entity
-        Order order = OrderMapper.fromCreateDTO(createDTO);
 
-        // Save the product to the database
+        Order order = new Order();
+        order.setCustomerName(createDTO.getCustomerName());
+        order.setCompleted(false);
+        order.setCreatedAt(LocalDateTime.now());
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (OrderItemDTO itemDTO : createDTO.getOrderItems()) {
+            Product product = productRepository
+                    .findByName(itemDTO.getProductName())
+                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + itemDTO.getProductName()));
+
+            if (product.getStock() < itemDTO.getQuantity())
+                throw new IllegalStateException("Not enough stock for product: " + product.getName());
+
+            product.setStock(product.getStock() - itemDTO.getQuantity());
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProductName(product.getName());
+            orderItem.setQuantity(itemDTO.getQuantity());
+            orderItem.setPrice(product.getPrice());
+            orderItem.setOrder(order);
+
+            orderItems.add(orderItem);
+
+            total = total.add(product.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
+        }
+
+        order.setOrderItems(orderItems);
+        order.setTotalAmount(total);
+
         Order savedOrder = orderRepository.save(order);
 
-        // Return the saved product converted to DTO
         return OrderMapper.toDTO(savedOrder);
     }
 
@@ -69,16 +108,22 @@ public class OrderService {
         return OrderMapper.toDTO(order);
     }
 
-    public List<OrderDTO> getAllOrders() {
-        return mapToDTOList(orderRepository.findAll());
+    public Page<OrderDTO> getAllOrders(Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findAll(pageable);
+
+        return orderPage.map(OrderMapper::toDTO);
     }
 
-    public List<OrderDTO> getCompletedOrders() {
-        return mapToDTOList(orderRepository.findByCompletedTrue());
+    public Page<OrderDTO> getCompletedOrders(Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findByCompletedTrue(pageable);
+
+        return orderPage.map(OrderMapper::toDTO);
     }
 
-    public List<OrderDTO> getUncompletedOrders() {
-        return mapToDTOList(orderRepository.findByCompletedFalse());
+    public Page<OrderDTO> getUncompletedOrders(Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findByCompletedFalse(pageable);
+
+        return orderPage.map(OrderMapper::toDTO);
     }
 
     public List<OrderDTO> getOrdersByCustomer(String customerName) {
@@ -150,7 +195,7 @@ public class OrderService {
 
     public OrderDTO markAsUncompleted(Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found."));
         order.setCompleted(false);
         return OrderMapper.toDTO(orderRepository.save(order));
     }

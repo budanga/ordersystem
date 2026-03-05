@@ -1,6 +1,5 @@
 package com.budanga.ordersystem.mapper;
 
-import com.budanga.ordersystem.dto.CreateOrderDTO;
 import com.budanga.ordersystem.dto.OrderDTO;
 import com.budanga.ordersystem.dto.OrderItemDTO;
 import com.budanga.ordersystem.dto.UpdateOrderDTO;
@@ -24,23 +23,6 @@ public class OrderMapper {
                 order.getOrderItems() != null ? order.getOrderItems().stream()
                         .map(OrderMapper::toOrderItemDTO)
                         .collect(Collectors.toList()) : null);
-    }
-
-    public static Order fromCreateDTO(CreateOrderDTO dto) {
-        if (dto == null)
-            return null;
-
-        Order order = new Order();
-        order.setCustomerName(dto.getCustomerName());
-        order.setTotalAmount(dto.getTotalAmount());
-
-        if (dto.getOrderItems() != null) {
-            order.setOrderItems(dto.getOrderItems().stream()
-                    .map(itemDto -> fromOrderItemDTO(itemDto, order))
-                    .collect(Collectors.toList()));
-        }
-
-        return order;
     }
 
     public static OrderItemDTO toOrderItemDTO(OrderItem item) {
