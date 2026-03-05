@@ -12,8 +12,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
@@ -45,20 +48,47 @@ class OrderControllerTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
 
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
     private ProductRepository productRepository;
 
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    /** JWT Bearer token obtained once per test method via registration. */
+    private String bearerToken;
+
     @BeforeEach
-    void setupMockMvc() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    void setupMockMvc() throws Exception {
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(webApplicationContext)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
+        bearerToken = obtainBearerToken();
+    }
+
+    /** Registers a unique user and returns "Bearer <token>". */
+    private String obtainBearerToken() throws Exception {
+        String username = "testuser_" + System.nanoTime();
+        String body = objectMapper.writeValueAsString(Map.of("username", username, "password", "password123"));
+        MvcResult result = mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String token = objectMapper.readTree(result.getResponse().getContentAsString()).get("token").textValue();
+        return "Bearer " + token;
+    }
+
+    // ─── Auth helper ─────────────────────────────────────────────────────────
+
+    private <T extends MockHttpServletRequestBuilder> T auth(T builder) {
+        builder.header("Authorization", bearerToken);
+        return builder;
     }
 
     // ─── DB helpers ──────────────────────────────────────────────────────────
@@ -119,7 +149,7 @@ class OrderControllerTest {
                     "totalAmount", new BigDecimal("20.00"),
                     "orderItems", List.of(Map.of("productName", "Widget", "quantity", 2))));
 
-            mockMvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body))
+            mockMvc.perform(auth(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.customerName").value("Alice"))
                     .andExpect(jsonPath("$.totalAmount").value(20.0))
@@ -138,7 +168,7 @@ class OrderControllerTest {
                     "totalAmount", new BigDecimal("10.00"),
                     "orderItems", List.of(Map.of("productName", "Ghost", "quantity", 1))));
 
-            mockMvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body))
+            mockMvc.perform(auth(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value(containsString("Ghost")));
         }
@@ -151,7 +181,7 @@ class OrderControllerTest {
                     "totalAmount", new BigDecimal("1000.00"),
                     "orderItems", List.of(Map.of("productName", "Widget", "quantity", 100))));
 
-            mockMvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body))
+            mockMvc.perform(auth(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value(containsString("Widget")));
         }
@@ -168,7 +198,7 @@ class OrderControllerTest {
         void success() throws Exception {
             Order saved = saveOrder("Alice", new BigDecimal("50.00"), false);
 
-            mockMvc.perform(get(BASE + "/{id}", saved.getId()))
+            mockMvc.perform(auth(get(BASE + "/{id}", saved.getId())))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.customerName").value("Alice"))
                     .andExpect(jsonPath("$.id").value(saved.getId()));
@@ -177,7 +207,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("404: returns error response for unknown id")
         void notFound() throws Exception {
-            mockMvc.perform(get(BASE + "/999999"))
+            mockMvc.perform(auth(get(BASE + "/999999")))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
@@ -195,7 +225,7 @@ class OrderControllerTest {
             saveOrder("Alice", new BigDecimal("10.00"), false);
             saveOrder("Bob", new BigDecimal("20.00"), true);
 
-            mockMvc.perform(get(BASE).param("page", "0").param("size", "10"))
+            mockMvc.perform(auth(get(BASE).param("page", "0").param("size", "10")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalElements").value(2))
                     .andExpect(jsonPath("$.content", hasSize(2)));
@@ -208,7 +238,7 @@ class OrderControllerTest {
             saveOrder("B", BigDecimal.ONE, false);
             saveOrder("C", BigDecimal.ONE, false);
 
-            mockMvc.perform(get(BASE).param("page", "0").param("size", "2"))
+            mockMvc.perform(auth(get(BASE).param("page", "0").param("size", "2")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(2)))
                     .andExpect(jsonPath("$.totalElements").value(3))
@@ -221,7 +251,7 @@ class OrderControllerTest {
             saveOrder("Zara", BigDecimal.ONE, false);
             saveOrder("Alice", BigDecimal.ONE, false);
 
-            mockMvc.perform(get(BASE).param("sort", "customerName,asc"))
+            mockMvc.perform(auth(get(BASE).param("sort", "customerName,asc")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].customerName").value("Alice"))
                     .andExpect(jsonPath("$.content[1].customerName").value("Zara"));
@@ -243,7 +273,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("GET /completed: returns only completed orders")
         void completedOrders() throws Exception {
-            mockMvc.perform(get(BASE + "/completed"))
+            mockMvc.perform(auth(get(BASE + "/completed")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].completed").value(true));
@@ -252,7 +282,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("GET /uncompleted: returns only uncompleted orders")
         void uncompletedOrders() throws Exception {
-            mockMvc.perform(get(BASE + "/uncompleted"))
+            mockMvc.perform(auth(get(BASE + "/uncompleted")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].completed").value(false));
@@ -271,7 +301,7 @@ class OrderControllerTest {
             saveOrder("Alice", BigDecimal.TEN, false);
             saveOrder("Bob", BigDecimal.TEN, false);
 
-            mockMvc.perform(get(BASE + "/customer").param("customerName", "Alice"))
+            mockMvc.perform(auth(get(BASE + "/customer").param("customerName", "Alice")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].customerName").value("Alice"));
@@ -280,7 +310,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("returns empty list when no orders match the customer name")
         void noMatch() throws Exception {
-            mockMvc.perform(get(BASE + "/customer").param("customerName", "Ghost"))
+            mockMvc.perform(auth(get(BASE + "/customer").param("customerName", "Ghost")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(0)));
         }
@@ -302,7 +332,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("/totalamount/less: returns orders with total < threshold")
         void lessThan() throws Exception {
-            mockMvc.perform(get(BASE + "/totalamount/less").param("totalAmount", "50.00"))
+            mockMvc.perform(auth(get(BASE + "/totalamount/less").param("totalAmount", "50.00")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].customerName").value("A"));
@@ -311,7 +341,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("/totalamount/more: returns orders with total > threshold")
         void greaterThan() throws Exception {
-            mockMvc.perform(get(BASE + "/totalamount/more").param("totalAmount", "50.00"))
+            mockMvc.perform(auth(get(BASE + "/totalamount/more").param("totalAmount", "50.00")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].customerName").value("C"));
@@ -320,7 +350,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("/totalamount/desc: returns orders sorted by total descending")
         void sortedDesc() throws Exception {
-            mockMvc.perform(get(BASE + "/totalamount/desc"))
+            mockMvc.perform(auth(get(BASE + "/totalamount/desc")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].totalAmount").value(200.0))
                     .andExpect(jsonPath("$[2].totalAmount").value(10.0));
@@ -329,7 +359,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("/totalamount/asc: returns orders sorted by total ascending")
         void sortedAsc() throws Exception {
-            mockMvc.perform(get(BASE + "/totalamount/asc"))
+            mockMvc.perform(auth(get(BASE + "/totalamount/asc")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].totalAmount").value(10.0))
                     .andExpect(jsonPath("$[2].totalAmount").value(200.0));
@@ -348,7 +378,7 @@ class OrderControllerTest {
             saveOrder("Alice", BigDecimal.TEN, false);
             String future = "2099-12-31T23:59:59";
 
-            mockMvc.perform(get(BASE + "/created/before").param("date", future))
+            mockMvc.perform(auth(get(BASE + "/created/before").param("date", future)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
         }
@@ -358,7 +388,7 @@ class OrderControllerTest {
         void createdAfter() throws Exception {
             String past = "2000-01-01T00:00:00";
 
-            mockMvc.perform(get(BASE + "/created/after").param("date", past))
+            mockMvc.perform(auth(get(BASE + "/created/after").param("date", past)))
                     .andExpect(status().isOk());
         }
     }
@@ -376,7 +406,7 @@ class OrderControllerTest {
                     "Widget", 2, new BigDecimal("10.00"));
             saveOrder("Bob", new BigDecimal("5.00"), false);
 
-            mockMvc.perform(get(BASE + "/search/item").param("productName", "Wid"))
+            mockMvc.perform(auth(get(BASE + "/search/item").param("productName", "Wid")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].customerName").value("Alice"));
@@ -395,8 +425,8 @@ class OrderControllerTest {
             Order saved = saveOrder("Alice", BigDecimal.TEN, false);
             String body = objectMapper.writeValueAsString(Map.of("completed", true));
 
-            mockMvc.perform(put(BASE + "/{id}", saved.getId())
-                    .contentType(MediaType.APPLICATION_JSON).content(body))
+            mockMvc.perform(auth(put(BASE + "/{id}", saved.getId())
+                    .contentType(MediaType.APPLICATION_JSON).content(body)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.completed").value(true));
         }
@@ -406,8 +436,8 @@ class OrderControllerTest {
         void notFound() throws Exception {
             String body = objectMapper.writeValueAsString(Map.of("completed", true));
 
-            mockMvc.perform(put(BASE + "/999999")
-                    .contentType(MediaType.APPLICATION_JSON).content(body))
+            mockMvc.perform(auth(put(BASE + "/999999")
+                    .contentType(MediaType.APPLICATION_JSON).content(body)))
                     .andExpect(status().isNotFound());
         }
     }
@@ -423,7 +453,7 @@ class OrderControllerTest {
         void success() throws Exception {
             Order saved = saveOrder("Alice", BigDecimal.TEN, false);
 
-            mockMvc.perform(delete(BASE + "/{id}", saved.getId()))
+            mockMvc.perform(auth(delete(BASE + "/{id}", saved.getId())))
                     .andExpect(status().isOk());
         }
 
@@ -432,7 +462,7 @@ class OrderControllerTest {
         void cannotDeleteCompleted() throws Exception {
             Order saved = saveOrder("Alice", BigDecimal.TEN, true);
 
-            mockMvc.perform(delete(BASE + "/{id}", saved.getId()))
+            mockMvc.perform(auth(delete(BASE + "/{id}", saved.getId())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value(containsString("Completed orders")));
         }
@@ -440,7 +470,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("404: returns error for unknown order id")
         void notFound() throws Exception {
-            mockMvc.perform(delete(BASE + "/999999"))
+            mockMvc.perform(auth(delete(BASE + "/999999")))
                     .andExpect(status().isNotFound());
         }
     }
@@ -456,7 +486,7 @@ class OrderControllerTest {
         void markComplete() throws Exception {
             Order saved = saveOrder("Alice", BigDecimal.TEN, false);
 
-            mockMvc.perform(patch(BASE + "/{id}/complete", saved.getId()))
+            mockMvc.perform(auth(patch(BASE + "/{id}/complete", saved.getId())))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.completed").value(true));
         }
@@ -464,7 +494,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("/complete: returns 404 for unknown id")
         void markComplete_notFound() throws Exception {
-            mockMvc.perform(patch(BASE + "/999999/complete"))
+            mockMvc.perform(auth(patch(BASE + "/999999/complete")))
                     .andExpect(status().isNotFound());
         }
 
@@ -473,7 +503,7 @@ class OrderControllerTest {
         void markUncomplete() throws Exception {
             Order saved = saveOrder("Alice", BigDecimal.TEN, true);
 
-            mockMvc.perform(patch(BASE + "/{id}/uncomplete", saved.getId()))
+            mockMvc.perform(auth(patch(BASE + "/{id}/uncomplete", saved.getId())))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.completed").value(false));
         }
@@ -481,7 +511,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("/uncomplete: returns 404 for unknown id")
         void markUncomplete_notFound() throws Exception {
-            mockMvc.perform(patch(BASE + "/999999/uncomplete"))
+            mockMvc.perform(auth(patch(BASE + "/999999/uncomplete")))
                     .andExpect(status().isNotFound());
         }
     }
@@ -499,7 +529,7 @@ class OrderControllerTest {
             saveOrder("B", new BigDecimal("50.00"), true);
             saveOrder("C", new BigDecimal("200.00"), false); // excluded from revenue
 
-            mockMvc.perform(get(BASE + "/stats/revenue"))
+            mockMvc.perform(auth(get(BASE + "/stats/revenue")))
                     .andExpect(status().isOk())
                     .andExpect(content().string(containsString("150")));
         }
@@ -511,7 +541,7 @@ class OrderControllerTest {
             saveOrder("B", new BigDecimal("30.00"), true);
 
             // Average = (10 + 30) / 2 = 20.00
-            mockMvc.perform(get(BASE + "/stats/average"))
+            mockMvc.perform(auth(get(BASE + "/stats/average")))
                     .andExpect(status().isOk())
                     .andExpect(content().string(containsString("20")));
         }
@@ -523,7 +553,7 @@ class OrderControllerTest {
             saveOrder("B", BigDecimal.TEN, true);
             saveOrder("C", BigDecimal.TEN, false);
 
-            mockMvc.perform(get(BASE + "/completed/count"))
+            mockMvc.perform(auth(get(BASE + "/completed/count")))
                     .andExpect(status().isOk())
                     .andExpect(content().string("2"));
         }
@@ -534,7 +564,7 @@ class OrderControllerTest {
             saveOrder("A", BigDecimal.TEN, false);
             saveOrder("B", BigDecimal.TEN, true);
 
-            mockMvc.perform(get(BASE + "/uncompleted/count"))
+            mockMvc.perform(auth(get(BASE + "/uncompleted/count")))
                     .andExpect(status().isOk())
                     .andExpect(content().string("1"));
         }
