@@ -11,10 +11,13 @@ import com.budanga.ordersystem.dto.ProductDTO;
 import com.budanga.ordersystem.dto.UpdateProductDTO;
 import com.budanga.ordersystem.service.ProductService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/products")
+@Tag(name = "Products", description = "Operations related to product catalog management, pricing, and inventory")
 public class ProductController {
     private final ProductService productService;
 
@@ -23,11 +26,13 @@ public class ProductController {
     }
 
     @PostMapping
+    @Operation(summary = "Registration of a new product")
     public ProductDTO createProduct(@Valid @RequestBody CreateProductDTO createDTO) {
         return productService.createProduct(createDTO);
     }
 
     @PutMapping("{id}")
+    @Operation(summary = "Update product details", description = "Allows updating price, stock, and active status.")
     public ProductDTO updateProduct(@PathVariable("id") Long productId,
             @Valid @RequestBody UpdateProductDTO updateDTO) {
         return productService.updateProduct(productId, updateDTO);
@@ -95,6 +100,7 @@ public class ProductController {
     }
 
     @GetMapping("/stock/total")
+    @Operation(summary = "Total items in stock", description = "Returns the sum of all product quantities.")
     public Long totalStock() {
         return productService.totalStock();
     }

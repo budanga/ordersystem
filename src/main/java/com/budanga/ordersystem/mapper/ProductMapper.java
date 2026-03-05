@@ -14,7 +14,7 @@ public class ProductMapper {
                 product.getPrice(),
                 product.getStock(),
                 product.getActive(),
-                product.getCreationDate());
+                product.getCreatedAt());
     }
 
     public static Product fromCreateDTO(CreateProductDTO dto) {
