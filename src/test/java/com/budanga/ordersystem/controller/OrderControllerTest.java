@@ -87,11 +87,14 @@ class OrderControllerTest {
         o.setTotalAmount(total);
         o.setCompleted(completed);
 
+        Product p = saveProduct(productName, price, qty + 10);
+
         OrderItem item = new OrderItem();
         item.setProductName(productName);
         item.setQuantity(qty);
         item.setPrice(price);
         item.setOrder(o);
+        item.setProduct(p);
         o.setOrderItems(List.of(item));
 
         return orderRepository.saveAndFlush(o);

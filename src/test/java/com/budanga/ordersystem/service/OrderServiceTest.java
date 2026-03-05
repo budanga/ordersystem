@@ -85,6 +85,7 @@ class OrderServiceTest {
             item.setProductName("Widget");
             item.setQuantity(2);
             item.setPrice(new BigDecimal("10.00"));
+            item.setProduct(product);
             savedOrder.setOrderItems(List.of(item));
             when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
