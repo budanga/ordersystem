@@ -116,6 +116,7 @@ class OrderControllerTest {
         void success() throws Exception {
             String body = objectMapper.writeValueAsString(Map.of(
                     "customerName", "Alice",
+                    "totalAmount", new BigDecimal("20.00"),
                     "orderItems", List.of(Map.of("productName", "Widget", "quantity", 2))));
 
             mockMvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body))
@@ -134,6 +135,7 @@ class OrderControllerTest {
         void productNotFound() throws Exception {
             String body = objectMapper.writeValueAsString(Map.of(
                     "customerName", "Bob",
+                    "totalAmount", new BigDecimal("10.00"),
                     "orderItems", List.of(Map.of("productName", "Ghost", "quantity", 1))));
 
             mockMvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body))
@@ -146,6 +148,7 @@ class OrderControllerTest {
         void insufficientStock() throws Exception {
             String body = objectMapper.writeValueAsString(Map.of(
                     "customerName", "Carol",
+                    "totalAmount", new BigDecimal("1000.00"),
                     "orderItems", List.of(Map.of("productName", "Widget", "quantity", 100))));
 
             mockMvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body))
