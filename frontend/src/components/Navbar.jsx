@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 
 export function Navbar() {
@@ -8,6 +8,44 @@ export function Navbar() {
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+    // Render states for exit animation
+    const [shouldRenderCart, setShouldRenderCart] = useState(false);
+    const [shouldRenderNotif, setShouldRenderNotif] = useState(false);
+    const [shouldRenderProfile, setShouldRenderProfile] = useState(false);
+
+    useEffect(() => {
+        if (isCartOpen) {
+            setShouldRenderCart(true);
+            setIsNotifOpen(false);
+            setIsProfileOpen(false);
+        } else {
+            const timer = setTimeout(() => setShouldRenderCart(false), 120);
+            return () => clearTimeout(timer);
+        }
+    }, [isCartOpen]);
+
+    useEffect(() => {
+        if (isNotifOpen) {
+            setShouldRenderNotif(true);
+            setIsCartOpen(false);
+            setIsProfileOpen(false);
+        } else {
+            const timer = setTimeout(() => setShouldRenderNotif(false), 120);
+            return () => clearTimeout(timer);
+        }
+    }, [isNotifOpen]);
+
+    useEffect(() => {
+        if (isProfileOpen) {
+            setShouldRenderProfile(true);
+            setIsCartOpen(false);
+            setIsNotifOpen(false);
+        } else {
+            const timer = setTimeout(() => setShouldRenderProfile(false), 120);
+            return () => clearTimeout(timer);
+        }
+    }, [isProfileOpen]);
 
     // Calculate total numbers of items in the cart
     const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -40,8 +78,8 @@ export function Navbar() {
                     {/* Cart Dropdown */}
                     <div className="relative">
                         <button
-                            onClick={() => { setIsCartOpen(!isCartOpen); setIsNotifOpen(false); setIsProfileOpen(false); }}
-                            className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                            onClick={() => setIsCartOpen(!isCartOpen)}
+                            className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 cursor-pointer"
                         >
                             <span className="material-symbols-outlined">shopping_cart</span>
                             {cartItemsCount > 0 && (
@@ -51,8 +89,8 @@ export function Navbar() {
                             )}
                         </button>
 
-                        {isCartOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 flex flex-col max-h-[80vh]">
+                        {shouldRenderCart && (
+                            <div className={`absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 flex flex-col max-h-[80vh] origin-top-right ${isCartOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
                                 <div className="p-4 border-b border-slate-100 dark:border-slate-700">
                                     <h3 className="font-bold text-slate-900 dark:text-white">Your Cart ({cartItemsCount})</h3>
                                 </div>
@@ -112,13 +150,13 @@ export function Navbar() {
                     {/* Notifications Dropdown */}
                     <div className="relative">
                         <button
-                            onClick={() => { setIsNotifOpen(!isNotifOpen); setIsCartOpen(false); setIsProfileOpen(false); }}
-                            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                            onClick={() => setIsNotifOpen(!isNotifOpen)}
+                            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 cursor-pointer"
                         >
                             <span className="material-symbols-outlined">notifications</span>
                         </button>
-                        {isNotifOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 p-4 text-center text-sm text-slate-500">
+                        {shouldRenderNotif && (
+                            <div className={`absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 p-4 text-center text-sm text-slate-500 origin-top-right ${isNotifOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
                                 No new notifications
                             </div>
                         )}
@@ -128,7 +166,7 @@ export function Navbar() {
 
                     {/* Profile Dropdown */}
                     <div className="relative">
-                        <div className="flex items-center gap-3 pl-2 cursor-pointer" onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotifOpen(false); setIsCartOpen(false); }}>
+                        <div className="flex items-center gap-3 pl-2 cursor-pointer transition-all active:scale-95" onClick={() => setIsProfileOpen(!isProfileOpen)}>
                             <div className="text-right hidden sm:block">
                                 <p className="text-xs font-medium text-slate-900 dark:text-white leading-none">Alex Rivera</p>
                                 <p className="text-[10px] text-slate-500 font-medium">Gold Member</p>
@@ -138,8 +176,8 @@ export function Navbar() {
                             </div>
                         </div>
 
-                        {isProfileOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 py-2">
+                        {shouldRenderProfile && (
+                            <div className={`absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 py-2 origin-top-right ${isProfileOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
                                 <button className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
                                     My Orders
                                 </button>
