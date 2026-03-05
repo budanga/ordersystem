@@ -7,6 +7,7 @@ import com.budanga.ordersystem.entity.RefreshToken;
 import com.budanga.ordersystem.entity.User;
 import com.budanga.ordersystem.repository.UserRepository;
 import com.budanga.ordersystem.security.JwtService;
+import com.budanga.ordersystem.service.LoginAttemptService;
 import com.budanga.ordersystem.service.RefreshTokenService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -15,7 +16,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,15 +31,17 @@ public class AuthController {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
+    private final LoginAttemptService loginAttemptService;
 
     public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder,
             JwtService jwtService, AuthenticationManager authenticationManager,
-            RefreshTokenService refreshTokenService) {
+            RefreshTokenService refreshTokenService, LoginAttemptService loginAttemptService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
+        this.loginAttemptService = loginAttemptService;
     }
 
     @PostMapping("/register")
@@ -70,10 +72,16 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody AuthRequestDTO request) {
+        if (loginAttemptService.isBlocked(request.getUsername())) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
+
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+            loginAttemptService.loginSucceeded(request.getUsername());
         } catch (BadCredentialsException | InternalAuthenticationServiceException e) {
+            loginAttemptService.loginFailed(request.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
