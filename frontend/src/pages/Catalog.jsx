@@ -1,8 +1,20 @@
 import { useState, useEffect } from 'react';
 import { ProductCard } from '../components/ProductCard';
+import { useAppContext } from '../context/AppContext';
 import api from '../api';
 
 export function Catalog() {
+    const {
+        viewMode, setViewMode,
+        searchQuery,
+        selectedCategory,
+        priceRange,
+        inStockOnly,
+        sortBy, setSortBy,
+        currentPage, setCurrentPage,
+        totalPages, setTotalPages
+    } = useAppContext();
+
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -11,11 +23,30 @@ export function Catalog() {
         const fetchProducts = async () => {
             try {
                 setLoading(true);
-                // Assuming your backend returns a list of ProductDTO at /api/products
-                const data = await api.get('/products'); // Destructure data from the response
-                // Handle if spring boot returns an array directly, or an object containing it
-                const productList = Array.isArray(data) ? data : data.content || [];
+
+                // Construct parameters for search
+                const params = {
+                    page: currentPage,
+                    size: 12,
+                    sort: sortBy
+                };
+
+                if (searchQuery) params.name = searchQuery;
+                if (selectedCategory) params.category = selectedCategory;
+                if (priceRange[0] !== null) params.minPrice = priceRange[0];
+                if (priceRange[1] !== null) params.maxPrice = priceRange[1];
+                if (inStockOnly) params.inStock = true;
+
+                const data = await api.get('/products/search', { params });
+
+                // Handle Page<ProductDTO>
+                const productList = data.content || [];
                 setProducts(productList);
+
+                if (data.totalPages !== undefined) {
+                    setTotalPages(data.totalPages);
+                }
+
                 setError(null);
             } catch (err) {
                 console.error("Error fetching products:", err);
@@ -25,8 +56,10 @@ export function Catalog() {
             }
         };
 
-        fetchProducts();
-    }, []);
+        // Debounce fetching if needed, for simplicity we just fetch on dependency change
+        const timeoutId = setTimeout(fetchProducts, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery, selectedCategory, priceRange, inStockOnly, sortBy, currentPage, setTotalPages]);
 
     return (
         <>
@@ -42,18 +75,28 @@ export function Catalog() {
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                        <button className="p-1.5 bg-white dark:bg-slate-700 rounded shadow-sm text-primary">
+                        <button
+                            className={`p-1.5 rounded shadow-sm ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                            onClick={() => setViewMode('grid')}
+                        >
                             <span className="material-symbols-outlined block">grid_view</span>
                         </button>
-                        <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <button
+                            className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                            onClick={() => setViewMode('list')}
+                        >
                             <span className="material-symbols-outlined block">view_list</span>
                         </button>
                     </div>
-                    <select className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-medium py-2 pl-4 pr-10 focus:ring-2 focus:ring-primary appearance-none cursor-pointer">
-                        <option>Sort by: Popularity</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
-                        <option>Newest Arrivals</option>
+                    <select
+                        className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-medium py-2 pl-4 pr-10 focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                    >
+                        <option value="name,asc">Sort by: Name (A-Z)</option>
+                        <option value="name,desc">Name (Z-A)</option>
+                        <option value="price,asc">Price: Low to High</option>
+                        <option value="price,desc">Price: High to Low</option>
                     </select>
                 </div>
             </div>
@@ -69,29 +112,48 @@ export function Catalog() {
                 </div>
             ) : products.length === 0 ? (
                 <div className="text-center py-20 text-slate-500">
-                    No products found in this category.
+                    No products found matching your criteria.
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+                <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8" : "flex flex-col gap-6"}>
                     {products.map(product => (
-                        <ProductCard key={product.id} product={product} />
+                        <ProductCard key={product.id} product={product} viewMode={viewMode} />
                     ))}
                 </div>
             )}
 
-            <div className="mt-12 flex items-center justify-center gap-2">
-                <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary transition-all">
-                    <span className="material-symbols-outlined">chevron_left</span>
-                </button>
-                <button className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold shadow-lg shadow-primary/20">1</button>
-                <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-transparent text-slate-600 dark:text-slate-400 hover:border-slate-200 dark:hover:border-slate-800 transition-all font-medium hover:text-primary">2</button>
-                <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-transparent text-slate-600 dark:text-slate-400 hover:border-slate-200 dark:hover:border-slate-800 transition-all font-medium hover:text-primary">3</button>
-                <span className="text-slate-400 mx-1">...</span>
-                <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-transparent text-slate-600 dark:text-slate-400 hover:border-slate-200 dark:hover:border-slate-800 transition-all font-medium hover:text-primary">12</button>
-                <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary transition-all">
-                    <span className="material-symbols-outlined">chevron_right</span>
-                </button>
-            </div>
+            {totalPages > 1 && (
+                <div className="mt-12 flex items-center justify-center gap-2">
+                    <button
+                        className="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                        disabled={currentPage === 0}
+                    >
+                        <span className="material-symbols-outlined">chevron_left</span>
+                    </button>
+
+                    {[...Array(totalPages)].map((_, i) => (
+                        <button
+                            key={i}
+                            className={`h-10 w-10 flex items-center justify-center rounded-lg border font-medium transition-all ${currentPage === i
+                                    ? 'bg-primary text-white font-bold shadow-lg shadow-primary/20 border-transparent'
+                                    : 'border-transparent text-slate-600 dark:text-slate-400 hover:border-slate-200 dark:hover:border-slate-800 hover:text-primary'
+                                }`}
+                            onClick={() => setCurrentPage(i)}
+                        >
+                            {i + 1}
+                        </button>
+                    ))}
+
+                    <button
+                        className="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                        disabled={currentPage === totalPages - 1}
+                    >
+                        <span className="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+            )}
         </>
     );
 }

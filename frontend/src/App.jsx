@@ -1,11 +1,14 @@
 import { Layout } from './components/Layout'
 import { Catalog } from './pages/Catalog'
+import { AppProvider } from './context/AppContext'
 
 function App() {
   return (
-    <Layout>
-      <Catalog />
-    </Layout>
+    <AppProvider>
+      <Layout>
+        <Catalog />
+      </Layout>
+    </AppProvider>
   )
 }
 
