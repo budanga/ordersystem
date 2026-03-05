@@ -30,6 +30,10 @@ public class CreateProductDTO {
     @Schema(description = "Initial stock quantity", example = "200")
     private Integer stock;
 
+    @NotBlank(message = "Category is required")
+    @Schema(description = "Category of the product", example = "Electronics")
+    private String category;
+
     @URL
     @NotBlank(message = "Image is required")
     @Schema(description = "URL of the product image", example = "https://example.com/product.jpg")

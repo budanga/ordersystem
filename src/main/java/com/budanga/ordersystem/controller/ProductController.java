@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import com.budanga.ordersystem.dto.CreateProductDTO;
@@ -45,6 +48,24 @@ public class ProductController {
     @GetMapping
     public List<ProductDTO> getAllProducts() {
         return productService.getAllProducts();
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Search products with filters and pagination")
+    public Page<ProductDTO> searchProducts(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Boolean inStock,
+            @PageableDefault(size = 12, sort = "name") Pageable pageable) {
+        return productService.searchProducts(name, category, minPrice, maxPrice, inStock, pageable);
+    }
+
+    @GetMapping("/categories")
+    @Operation(summary = "Get all unique categories")
+    public List<String> getAllCategories() {
+        return productService.getAllCategories();
     }
 
     @GetMapping("/active")

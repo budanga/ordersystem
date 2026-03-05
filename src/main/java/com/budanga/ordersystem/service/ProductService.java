@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.budanga.ordersystem.dto.CreateProductDTO;
@@ -71,6 +74,40 @@ public class ProductService {
 
         // Return the product converted to DTO
         return ProductMapper.toDTO(product);
+    }
+
+    public Page<ProductDTO> searchProducts(String name, String category, BigDecimal minPrice, BigDecimal maxPrice,
+            Boolean inStock, Pageable pageable) {
+        Specification<Product> spec = Specification.where(null);
+
+        if (name != null && !name.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+        }
+
+        if (category != null && !category.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("category"), category));
+        }
+
+        if (minPrice != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("price"), minPrice));
+        }
+
+        if (maxPrice != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("price"), maxPrice));
+        }
+
+        if (inStock != null && inStock) {
+            spec = spec.and((root, query, cb) -> cb.greaterThan(root.get("stock"), 0));
+        }
+
+        // Only search active products
+        spec = spec.and((root, query, cb) -> cb.isTrue(root.get("active")));
+
+        return productRepository.findAll(spec, pageable).map(ProductMapper::toDTO);
+    }
+
+    public List<String> getAllCategories() {
+        return productRepository.findUniqueCategories();
     }
 
     public List<ProductDTO> getAllProducts() {

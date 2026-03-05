@@ -25,6 +25,9 @@ public class ProductDTO {
     @Schema(description = "Current stock quantity", example = "100")
     private Integer stock;
 
+    @Schema(description = "Category of the product", example = "Electronics")
+    private String category;
+
     @Schema(description = "Whether the product is available for sale", example = "true")
     private Boolean active;
 

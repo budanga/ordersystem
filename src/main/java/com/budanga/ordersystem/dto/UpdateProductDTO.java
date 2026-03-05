@@ -31,6 +31,10 @@ public class UpdateProductDTO {
     @Schema(description = "Updated availability status", example = "false")
     private Boolean active;
 
+    @Size(min = 1, message = "Category cannot be empty")
+    @Schema(description = "Updated category of the product", example = "Office Supplies")
+    private String category;
+
     @URL
     @Schema(description = "Updated product image URL", example = "https://example.com/new-product.jpg")
     private String imageUrl;
