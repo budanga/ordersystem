@@ -8,7 +8,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 <<<<<<< Updated upstream
 =======
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
