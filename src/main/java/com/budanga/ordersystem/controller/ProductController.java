@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/products")
 @Tag(name = "Products", description = "Operations related to product catalog management, pricing, and inventory")
@@ -26,12 +28,14 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Registration of a new product")
     public ProductDTO createProduct(@Valid @RequestBody CreateProductDTO createDTO) {
         return productService.createProduct(createDTO);
     }
 
     @PutMapping("{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update product details", description = "Allows updating price, stock, and active status.")
     public ProductDTO updateProduct(@PathVariable("id") Long productId,
             @Valid @RequestBody UpdateProductDTO updateDTO) {

@@ -16,6 +16,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -39,9 +42,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
+        Set<String> roles = request.getRoles();
+        if (roles == null || roles.isEmpty()) {
+            roles = new HashSet<>();
+            roles.add("ROLE_USER");
+        }
+
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .roles(roles)
                 .build();
 
         userRepository.save(user);

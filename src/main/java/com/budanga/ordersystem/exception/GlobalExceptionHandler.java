@@ -44,6 +44,22 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            org.springframework.security.access.AccessDeniedException ex) {
+        ErrorResponse error = new ErrorResponse("Access Denied: You do not have permission to access this resource",
+                LocalDateTime.now(), HttpStatus.FORBIDDEN.value());
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(
+            org.springframework.security.core.AuthenticationException ex) {
+        ErrorResponse error = new ErrorResponse("Authentication failed: " + ex.getMessage(),
+                LocalDateTime.now(), HttpStatus.UNAUTHORIZED.value());
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
         ErrorResponse error = new ErrorResponse(ex.getMessage(), LocalDateTime.now(),

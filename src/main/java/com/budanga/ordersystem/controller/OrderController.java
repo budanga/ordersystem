@@ -18,6 +18,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/orders")
 @Tag(name = "Orders", description = "Operations related to order management, checkout, and sales statistics")
@@ -45,6 +47,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
     }
@@ -125,11 +128,13 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/complete")
+    @PreAuthorize("hasRole('ADMIN')")
     public OrderDTO markOrderAsCompleted(@PathVariable("id") Long orderId) {
         return orderService.markAsCompleted(orderId);
     }
 
     @PatchMapping("/{id}/uncomplete")
+    @PreAuthorize("hasRole('ADMIN')")
     public OrderDTO markOrderAsUncompleted(@PathVariable("id") Long orderId) {
         return orderService.markAsUncompleted(orderId);
     }
