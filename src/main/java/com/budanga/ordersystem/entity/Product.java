@@ -34,6 +34,9 @@ public class Product {
     @Column(nullable = false)
     private Boolean active = true;
 
+    @Column(nullable = false, name = "image_url")
+    private String imageUrl;
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

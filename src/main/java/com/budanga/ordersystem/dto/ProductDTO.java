@@ -2,6 +2,7 @@ package com.budanga.ordersystem.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import org.hibernate.validator.constraints.URL;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,6 +27,10 @@ public class ProductDTO {
 
     @Schema(description = "Whether the product is available for sale", example = "true")
     private Boolean active;
+
+    @URL
+    @Schema(description = "URL of the product image", example = "https://example.com/product.jpg")
+    private String imageUrl;
 
     @Schema(description = "Timestamp when the product was registered", example = "2024-03-05T00:00:00")
     private LocalDateTime createdAt;

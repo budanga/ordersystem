@@ -2,6 +2,8 @@ package com.budanga.ordersystem.dto;
 
 import java.math.BigDecimal;
 
+import org.hibernate.validator.constraints.URL;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -17,6 +19,10 @@ public class OrderItemDTO {
     @NotBlank(message = "Product name is required")
     @Schema(description = "Name of the product being ordered", example = "Wireless Mouse")
     private String productName;
+
+    @URL
+    @Schema(description = "URL of the product image at the time of the order", example = "https://example.com/product.jpg")
+    private String productImageUrl;
 
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")

@@ -2,6 +2,8 @@ package com.budanga.ordersystem.dto;
 
 import java.math.BigDecimal;
 
+import org.hibernate.validator.constraints.URL;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -27,4 +29,9 @@ public class CreateProductDTO {
     @Min(value = 0, message = "Stock must be positive")
     @Schema(description = "Initial stock quantity", example = "200")
     private Integer stock;
+
+    @URL
+    @NotBlank(message = "Image is required")
+    @Schema(description = "URL of the product image", example = "https://example.com/product.jpg")
+    private String imageUrl;
 }

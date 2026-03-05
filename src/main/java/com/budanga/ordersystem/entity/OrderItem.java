@@ -19,6 +19,7 @@ public class OrderItem {
     private Long id;
 
     private String productName;
+    private String productImageUrl;
     private Integer quantity;
     private BigDecimal price;
 

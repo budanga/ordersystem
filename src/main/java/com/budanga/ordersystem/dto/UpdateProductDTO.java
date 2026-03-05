@@ -2,6 +2,8 @@ package com.budanga.ordersystem.dto;
 
 import java.math.BigDecimal;
 
+import org.hibernate.validator.constraints.URL;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -28,4 +30,8 @@ public class UpdateProductDTO {
 
     @Schema(description = "Updated availability status", example = "false")
     private Boolean active;
+
+    @URL
+    @Schema(description = "Updated product image URL", example = "https://example.com/new-product.jpg")
+    private String imageUrl;
 }

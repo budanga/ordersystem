@@ -138,6 +138,7 @@ class OrderControllerTest {
         p.setPrice(price);
         p.setStock(stock);
         p.setActive(true);
+        p.setImageUrl("https://example.com/default.jpg");
         return productRepository.saveAndFlush(p);
     }
 

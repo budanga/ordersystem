@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -55,12 +54,13 @@ class OrderServiceTest {
 
     // ─── Helpers ────────────────────────────────────────────────────────────
 
-    private Product makeProduct(String name, BigDecimal price, int stock) {
+    private Product makeProduct(String name, BigDecimal price, int stock, String imageUrl) {
         Product p = new Product();
         p.setName(name);
         p.setPrice(price);
         p.setStock(stock);
         p.setActive(true);
+        p.setImageUrl(imageUrl);
         return p;
     }
 
@@ -84,12 +84,13 @@ class OrderServiceTest {
         @Test
         @DisplayName("happy path: saves order, decrements stock, calculates total")
         void success() {
-            Product product = makeProduct("Widget", new BigDecimal("10.00"), 5);
+            Product product = makeProduct("Widget", new BigDecimal("10.00"), 5, "widget.jpg");
             when(productRepository.findByName("Widget")).thenReturn(Optional.of(product));
 
             Order savedOrder = makeOrder(1L, "Alice", new BigDecimal("20.00"), false);
             OrderItem item = new OrderItem();
             item.setProductName("Widget");
+            item.setProductImageUrl("widget.jpg");
             item.setQuantity(2);
             item.setPrice(new BigDecimal("10.00"));
             item.setProduct(product);
@@ -98,7 +99,7 @@ class OrderServiceTest {
 
             CreateOrderDTO dto = new CreateOrderDTO();
             dto.setCustomerName("Alice");
-            dto.setOrderItems(List.of(new OrderItemDTO("Widget", 2, null)));
+            dto.setOrderItems(List.of(new OrderItemDTO("Widget", null, 2, null)));
 
             OrderDTO result = orderService.createOrder(dto);
 
@@ -110,6 +111,7 @@ class OrderServiceTest {
             verify(orderRepository).save(captor.capture());
             assertThat(captor.getValue().getTotalAmount()).isEqualByComparingTo("20.00");
             assertThat(captor.getValue().getCustomerName()).isEqualTo("Alice");
+            assertThat(captor.getValue().getOrderItems().get(0).getProductImageUrl()).isEqualTo("widget.jpg");
             assertThat(captor.getValue().getCompleted()).isFalse();
 
             assertThat(result).isNotNull();
@@ -123,7 +125,7 @@ class OrderServiceTest {
 
             CreateOrderDTO dto = new CreateOrderDTO();
             dto.setCustomerName("Bob");
-            dto.setOrderItems(List.of(new OrderItemDTO("Ghost", 1, null)));
+            dto.setOrderItems(List.of(new OrderItemDTO("Ghost", null, 1, null)));
 
             assertThatThrownBy(() -> orderService.createOrder(dto))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -135,12 +137,12 @@ class OrderServiceTest {
         @Test
         @DisplayName("throws IllegalStateException when stock is insufficient")
         void insufficientStock() {
-            Product product = makeProduct("Widget", new BigDecimal("10.00"), 1);
+            Product product = makeProduct("Widget", new BigDecimal("10.00"), 1, null);
             when(productRepository.findByName("Widget")).thenReturn(Optional.of(product));
 
             CreateOrderDTO dto = new CreateOrderDTO();
             dto.setCustomerName("Carol");
-            dto.setOrderItems(List.of(new OrderItemDTO("Widget", 5, null)));
+            dto.setOrderItems(List.of(new OrderItemDTO("Widget", null, 5, null)));
 
             assertThatThrownBy(() -> orderService.createOrder(dto))
                     .isInstanceOf(IllegalStateException.class)
@@ -154,8 +156,8 @@ class OrderServiceTest {
         @Test
         @DisplayName("processes multiple items and sums total correctly")
         void multipleItems() {
-            Product p1 = makeProduct("Apple", new BigDecimal("3.00"), 10);
-            Product p2 = makeProduct("Banana", new BigDecimal("2.00"), 10);
+            Product p1 = makeProduct("Apple", new BigDecimal("3.00"), 10, "apple.jpg");
+            Product p2 = makeProduct("Banana", new BigDecimal("2.00"), 10, "banana.jpg");
             when(productRepository.findByName("Apple")).thenReturn(Optional.of(p1));
             when(productRepository.findByName("Banana")).thenReturn(Optional.of(p2));
 
@@ -165,8 +167,8 @@ class OrderServiceTest {
             CreateOrderDTO dto = new CreateOrderDTO();
             dto.setCustomerName("Dave");
             dto.setOrderItems(List.of(
-                    new OrderItemDTO("Apple", 3, null), // 3 * 3.00 = 9.00
-                    new OrderItemDTO("Banana", 2, null) // 2 * 2.00 = 4.00
+                    new OrderItemDTO("Apple", null, 3, null), // 3 * 3.00 = 9.00
+                    new OrderItemDTO("Banana", null, 2, null) // 2 * 2.00 = 4.00
             ));
 
             orderService.createOrder(dto);

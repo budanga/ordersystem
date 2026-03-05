@@ -41,6 +41,7 @@ class ProductRepositoryTest {
         p.setPrice(price);
         p.setStock(stock);
         p.setActive(active);
+        p.setImageUrl("https://example.com/default.jpg");
         return productRepository.saveAndFlush(p);
     }
 

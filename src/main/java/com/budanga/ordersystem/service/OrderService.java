@@ -56,6 +56,7 @@ public class OrderService {
 
             OrderItem orderItem = new OrderItem();
             orderItem.setProductName(product.getName());
+            orderItem.setProductImageUrl(product.getImageUrl());
             orderItem.setQuantity(itemDTO.getQuantity());
             orderItem.setPrice(product.getPrice());
             orderItem.setOrder(order);

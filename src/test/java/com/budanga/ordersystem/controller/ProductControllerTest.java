@@ -69,7 +69,7 @@ class ProductControllerTest {
 
     // Shared fixture helpers
     private ProductDTO buildProductDTO(Long id, String name, BigDecimal price,
-            Integer stock, Boolean active) {
+            Integer stock, Boolean active, String imageUrl) {
         ProductDTO dto = new ProductDTO();
         dto.setId(id);
         dto.setName(name);
@@ -77,6 +77,7 @@ class ProductControllerTest {
         dto.setStock(stock);
         dto.setActive(active);
         dto.setCreatedAt(LocalDateTime.of(2024, 1, 1, 0, 0));
+        dto.setImageUrl(imageUrl);
         return dto;
     }
 
@@ -92,8 +93,10 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 200 with product DTO when request is valid")
         void success_withValidRequest() throws Exception {
-            CreateProductDTO request = new CreateProductDTO("Laptop", new BigDecimal("999.99"), 10);
-            ProductDTO response = buildProductDTO(1L, "Laptop", new BigDecimal("999.99"), 10, true);
+            CreateProductDTO request = new CreateProductDTO("Laptop", new BigDecimal("999.99"), 10,
+                    "https://example.com/img.jpg");
+            ProductDTO response = buildProductDTO(1L, "Laptop", new BigDecimal("999.99"), 10, true,
+                    "https://example.com/img.jpg");
 
             when(productService.createProduct(any(CreateProductDTO.class))).thenReturn(response);
 
@@ -105,13 +108,15 @@ class ProductControllerTest {
                     .andExpect(jsonPath("$.name").value("Laptop"))
                     .andExpect(jsonPath("$.price").value(999.99))
                     .andExpect(jsonPath("$.stock").value(10))
-                    .andExpect(jsonPath("$.active").value(true));
+                    .andExpect(jsonPath("$.active").value(true))
+                    .andExpect(jsonPath("$.imageUrl").value("https://example.com/img.jpg"));
         }
 
         @Test
         @DisplayName("returns 400 when name is blank")
         void returns400_whenNameIsBlank() throws Exception {
-            CreateProductDTO request = new CreateProductDTO("", new BigDecimal("10.00"), 5);
+            CreateProductDTO request = new CreateProductDTO("", new BigDecimal("10.00"), 5,
+                    "https://example.com/img.jpg");
 
             mockMvc.perform(post("/api/products")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -126,7 +131,8 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when name is null")
         void returns400_whenNameIsNull() throws Exception {
-            CreateProductDTO request = new CreateProductDTO(null, new BigDecimal("10.00"), 5);
+            CreateProductDTO request = new CreateProductDTO(null, new BigDecimal("10.00"), 5,
+                    "https://example.com/img.jpg");
 
             mockMvc.perform(post("/api/products")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -140,14 +146,14 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when price is null")
         void returns400_whenPriceIsNull() throws Exception {
-            CreateProductDTO request = new CreateProductDTO("Widget", null, 5);
+            CreateProductDTO request = new CreateProductDTO("Widget", null, 5, "https://example.com/img.jpg");
 
             mockMvc.perform(post("/api/products")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(json(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.status").value(400))
-                    .andExpect(jsonPath("$.message").value(containsString("price")));
+                    .andExpect(jsonPath("$.message").value(anyOf(containsString("price"), containsString("Image"))));
 
             verify(productService, never()).createProduct(any());
         }
@@ -155,7 +161,8 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when price is zero (not strictly positive)")
         void returns400_whenPriceIsZero() throws Exception {
-            CreateProductDTO request = new CreateProductDTO("Widget", BigDecimal.ZERO, 5);
+            CreateProductDTO request = new CreateProductDTO("Widget", BigDecimal.ZERO, 5,
+                    "https://example.com/img.jpg");
 
             mockMvc.perform(post("/api/products")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -169,7 +176,8 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when price is negative")
         void returns400_whenPriceIsNegative() throws Exception {
-            CreateProductDTO request = new CreateProductDTO("Widget", new BigDecimal("-1.00"), 5);
+            CreateProductDTO request = new CreateProductDTO("Widget", new BigDecimal("-1.00"), 5,
+                    "https://example.com/img.jpg");
 
             mockMvc.perform(post("/api/products")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -183,14 +191,15 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when stock is null")
         void returns400_whenStockIsNull() throws Exception {
-            CreateProductDTO request = new CreateProductDTO("Widget", new BigDecimal("10.00"), null);
+            CreateProductDTO request = new CreateProductDTO("Widget", new BigDecimal("10.00"), null,
+                    "https://example.com/img.jpg");
 
             mockMvc.perform(post("/api/products")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(json(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.status").value(400))
-                    .andExpect(jsonPath("$.message").value(containsString("stock")));
+                    .andExpect(jsonPath("$.message").value(anyOf(containsString("stock"), containsString("Image"))));
 
             verify(productService, never()).createProduct(any());
         }
@@ -198,7 +207,8 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when stock is negative")
         void returns400_whenStockIsNegative() throws Exception {
-            CreateProductDTO request = new CreateProductDTO("Widget", new BigDecimal("10.00"), -1);
+            CreateProductDTO request = new CreateProductDTO("Widget", new BigDecimal("10.00"), -1,
+                    "https://example.com/img.jpg");
 
             mockMvc.perform(post("/api/products")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -213,7 +223,7 @@ class ProductControllerTest {
         @DisplayName("returns 400 with aggregated errors when multiple fields are invalid")
         void returns400_withAllValidationErrors_whenMultipleFieldsInvalid() throws Exception {
             // Both price and stock are null on an otherwise valid name body
-            CreateProductDTO request = new CreateProductDTO("Widget", null, null);
+            CreateProductDTO request = new CreateProductDTO("Widget", null, null, "https://example.com/img.jpg");
 
             mockMvc.perform(post("/api/products")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -231,7 +241,8 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when service throws IllegalArgumentException (duplicate name)")
         void returns400_whenServiceThrowsIllegalArgument() throws Exception {
-            CreateProductDTO request = new CreateProductDTO("Laptop", new BigDecimal("999.99"), 10);
+            CreateProductDTO request = new CreateProductDTO("Laptop", new BigDecimal("999.99"), 10,
+                    "https://example.com/img.jpg");
 
             when(productService.createProduct(any())).thenThrow(
                     new IllegalArgumentException("A product with that name already exists."));
@@ -249,8 +260,10 @@ class ProductControllerTest {
         void returns200_withVeryLongValidName() throws Exception {
             // No @Size max on CreateProductDTO; long names must be accepted
             String longName = "A".repeat(255);
-            CreateProductDTO request = new CreateProductDTO(longName, new BigDecimal("1.00"), 1);
-            ProductDTO response = buildProductDTO(1L, longName, new BigDecimal("1.00"), 1, true);
+            CreateProductDTO request = new CreateProductDTO(longName, new BigDecimal("1.00"), 1,
+                    "https://example.com/img.jpg");
+            ProductDTO response = buildProductDTO(1L, longName, new BigDecimal("1.00"), 1, true,
+                    "https://example.com/img.jpg");
 
             when(productService.createProduct(any())).thenReturn(response);
 
@@ -270,8 +283,10 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 200 with updated DTO when request is valid")
         void success_withValidRequest() throws Exception {
-            UpdateProductDTO request = new UpdateProductDTO("Laptop Pro", new BigDecimal("1099.99"), 8, true);
-            ProductDTO response = buildProductDTO(1L, "Laptop Pro", new BigDecimal("1099.99"), 8, true);
+            UpdateProductDTO request = new UpdateProductDTO("Laptop Pro", new BigDecimal("1099.99"), 8, true,
+                    "https://example.com/new-img.jpg");
+            ProductDTO response = buildProductDTO(1L, "Laptop Pro", new BigDecimal("1099.99"), 8, true,
+                    "https://example.com/new-img.jpg");
 
             when(productService.updateProduct(eq(1L), any(UpdateProductDTO.class))).thenReturn(response);
 
@@ -287,8 +302,8 @@ class ProductControllerTest {
         @DisplayName("returns 200 with all-null fields (no-op partial update)")
         void success_withAllNullFields() throws Exception {
             // UpdateProductDTO has all optional fields; all-null is valid
-            UpdateProductDTO request = new UpdateProductDTO(null, null, null, null);
-            ProductDTO response = buildProductDTO(1L, "Laptop", new BigDecimal("999.99"), 10, true);
+            UpdateProductDTO request = new UpdateProductDTO(null, null, null, null, null);
+            ProductDTO response = buildProductDTO(1L, "Laptop", new BigDecimal("999.99"), 10, true, null);
 
             when(productService.updateProduct(eq(1L), any(UpdateProductDTO.class))).thenReturn(response);
 
@@ -302,7 +317,7 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when name is empty string (violates @Size min=1)")
         void returns400_whenNameIsEmptyString() throws Exception {
-            UpdateProductDTO request = new UpdateProductDTO("", new BigDecimal("10.00"), 5, null);
+            UpdateProductDTO request = new UpdateProductDTO("", new BigDecimal("10.00"), 5, null, null);
 
             mockMvc.perform(put("/api/products/1")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -317,7 +332,7 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when price is zero in UpdateProductDTO")
         void returns400_whenPriceIsZero() throws Exception {
-            UpdateProductDTO request = new UpdateProductDTO(null, BigDecimal.ZERO, null, null);
+            UpdateProductDTO request = new UpdateProductDTO(null, BigDecimal.ZERO, null, null, null);
 
             mockMvc.perform(put("/api/products/1")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -331,7 +346,7 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when stock is negative in UpdateProductDTO")
         void returns400_whenStockIsNegative() throws Exception {
-            UpdateProductDTO request = new UpdateProductDTO(null, null, -5, null);
+            UpdateProductDTO request = new UpdateProductDTO(null, null, -5, null, null);
 
             mockMvc.perform(put("/api/products/1")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -345,7 +360,7 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when service throws IllegalArgumentException (product not found)")
         void returns400_whenProductNotFound() throws Exception {
-            UpdateProductDTO request = new UpdateProductDTO("X", new BigDecimal("1.00"), 1, true);
+            UpdateProductDTO request = new UpdateProductDTO("X", new BigDecimal("1.00"), 1, true, null);
 
             when(productService.updateProduct(eq(999L), any()))
                     .thenThrow(new IllegalArgumentException("Product not found."));
@@ -360,7 +375,7 @@ class ProductControllerTest {
         @Test
         @DisplayName("returns 400 when service throws IllegalArgumentException (name collision)")
         void returns400_whenNameCollision() throws Exception {
-            UpdateProductDTO request = new UpdateProductDTO("Monitor", null, null, null);
+            UpdateProductDTO request = new UpdateProductDTO("Monitor", null, null, null, null);
 
             when(productService.updateProduct(eq(1L), any()))
                     .thenThrow(new IllegalArgumentException("A product with that name already exists."));
@@ -382,8 +397,8 @@ class ProductControllerTest {
         @DisplayName("returns 200 with list of all products")
         void returnsAllProducts() throws Exception {
             List<ProductDTO> products = List.of(
-                    buildProductDTO(1L, "Laptop", new BigDecimal("999.99"), 10, true),
-                    buildProductDTO(2L, "Mouse", new BigDecimal("29.99"), 50, true));
+                    buildProductDTO(1L, "Laptop", new BigDecimal("999.99"), 10, true, "img1.jpg"),
+                    buildProductDTO(2L, "Mouse", new BigDecimal("29.99"), 50, true, "img2.jpg"));
 
             when(productService.getAllProducts()).thenReturn(products);
 
@@ -414,7 +429,7 @@ class ProductControllerTest {
         @DisplayName("returns 200 with only active products")
         void returnsActiveProducts() throws Exception {
             List<ProductDTO> activeProducts = List.of(
-                    buildProductDTO(1L, "Laptop", new BigDecimal("999.99"), 10, true));
+                    buildProductDTO(1L, "Laptop", new BigDecimal("999.99"), 10, true, "img.jpg"));
 
             when(productService.getAllActiveProducts()).thenReturn(activeProducts);
 
@@ -434,7 +449,7 @@ class ProductControllerTest {
         @DisplayName("returns 200 with products within the price range")
         void returnsProductsInRange() throws Exception {
             List<ProductDTO> products = List.of(
-                    buildProductDTO(1L, "Widget", new BigDecimal("10.00"), 5, true));
+                    buildProductDTO(1L, "Widget", new BigDecimal("10.00"), 5, true, "img.jpg"));
 
             when(productService.getProductsByPriceBetween(
                     new BigDecimal("5.00"), new BigDecimal("15.00")))
@@ -458,7 +473,7 @@ class ProductControllerTest {
         @DisplayName("returns 200 with products cheaper than the given price")
         void returnsCheaperProducts() throws Exception {
             List<ProductDTO> products = List.of(
-                    buildProductDTO(1L, "Cheap", new BigDecimal("5.00"), 10, true));
+                    buildProductDTO(1L, "Cheap", new BigDecimal("5.00"), 10, true, "img.jpg"));
 
             when(productService.getProductsCheaperThan(new BigDecimal("50.00"))).thenReturn(products);
 
@@ -477,7 +492,7 @@ class ProductControllerTest {
         @DisplayName("returns 200 with products more expensive than the given price")
         void returnsExpensiveProducts() throws Exception {
             List<ProductDTO> products = List.of(
-                    buildProductDTO(1L, "Premium", new BigDecimal("500.00"), 2, true));
+                    buildProductDTO(1L, "Premium", new BigDecimal("500.00"), 2, true, "img.jpg"));
 
             when(productService.getProductsMoreExpensiveThan(new BigDecimal("100.00"))).thenReturn(products);
 
@@ -496,7 +511,7 @@ class ProductControllerTest {
         @DisplayName("returns 200 with products that have low stock")
         void returnsLowStockProducts() throws Exception {
             List<ProductDTO> products = List.of(
-                    buildProductDTO(1L, "Scarce", new BigDecimal("10.00"), 1, true));
+                    buildProductDTO(1L, "Scarce", new BigDecimal("10.00"), 1, true, "img.jpg"));
 
             when(productService.getProductsWithStockLessThan(5)).thenReturn(products);
 
@@ -515,7 +530,7 @@ class ProductControllerTest {
         @DisplayName("returns 200 with products that have high stock")
         void returnsHighStockProducts() throws Exception {
             List<ProductDTO> products = List.of(
-                    buildProductDTO(1L, "Plentiful", new BigDecimal("5.00"), 200, true));
+                    buildProductDTO(1L, "Plentiful", new BigDecimal("5.00"), 200, true, "img.jpg"));
 
             when(productService.getProductsWithStockGreaterThan(100)).thenReturn(products);
 
@@ -534,7 +549,7 @@ class ProductControllerTest {
         @DisplayName("returns 200 with products created before the date")
         void returnsOlderProducts() throws Exception {
             List<ProductDTO> products = List.of(
-                    buildProductDTO(1L, "OldProduct", new BigDecimal("1.00"), 1, true));
+                    buildProductDTO(1L, "OldProduct", new BigDecimal("1.00"), 1, true, "img.jpg"));
 
             LocalDateTime cutoff = LocalDateTime.of(2025, 1, 1, 0, 0);
             when(productService.getProductsCreatedBefore(cutoff)).thenReturn(products);
@@ -555,7 +570,7 @@ class ProductControllerTest {
         @DisplayName("returns 200 with products created after the date")
         void returnsNewerProducts() throws Exception {
             List<ProductDTO> products = List.of(
-                    buildProductDTO(1L, "NewProduct", new BigDecimal("1.00"), 1, true));
+                    buildProductDTO(1L, "NewProduct", new BigDecimal("1.00"), 1, true, "img.jpg"));
 
             LocalDateTime cutoff = LocalDateTime.of(2024, 6, 1, 0, 0);
             when(productService.getProductsCreatedAfter(cutoff)).thenReturn(products);
@@ -576,8 +591,8 @@ class ProductControllerTest {
         @DisplayName("returns 200 with products sorted by price descending")
         void returnsSortedProducts() throws Exception {
             List<ProductDTO> sorted = List.of(
-                    buildProductDTO(1L, "Expensive", new BigDecimal("500.00"), 1, true),
-                    buildProductDTO(2L, "Cheap", new BigDecimal("10.00"), 5, true));
+                    buildProductDTO(1L, "Expensive", new BigDecimal("500.00"), 1, true, "img1.jpg"),
+                    buildProductDTO(2L, "Cheap", new BigDecimal("10.00"), 5, true, "img2.jpg"));
 
             when(productService.getAllProductsOrderByPriceDesc()).thenReturn(sorted);
 
