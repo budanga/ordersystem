@@ -18,56 +18,11 @@ class ProductEntityTest {
     }
 
     @Test
-<<<<<<< Updated upstream
-    @DisplayName("createdAt and updatedAt are null before being persisted by the container")
-    void auditFieldsAreNullInitially() {
-=======
-<<<<<<< Updated upstream
-    @DisplayName("createdAt is null before prePersist is called")
-    void createdAtIsNullBeforePersist() {
->>>>>>> Stashed changes
-        Product product = new Product();
-<<<<<<< Updated upstream
-        assertThat(product.getCreatedAt()).isNull();
-=======
-<<<<<<< Updated upstream
-        assertThat(product.getCreationDate()).isNull();
->>>>>>> Stashed changes
-    }
-
-    // @PrePersist lifecycle hook
-    @Test
-    @DisplayName("prePersist sets createdAt to the current time")
-    void prePersistSetsCreatedAt() {
-        Product product = new Product();
-        LocalDateTime before = LocalDateTime.now();
-
-        product.prePersist();
-
-        LocalDateTime after = LocalDateTime.now();
-        assertThat(product.getCreatedAt())
-                .isAfterOrEqualTo(before)
-                .isBeforeOrEqualTo(after);
-    }
-
-    @Test
-    @DisplayName("prePersist sets createdAt within 1 second of now")
-    void prePersistTimestampIsRecent() {
-        Product product = new Product();
-        product.prePersist();
-
-        assertThat(product.getCreatedAt())
-                .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.SECONDS));
-=======
-<<<<<<< Updated upstream
-=======
     @DisplayName("audit fields are null initially before persistence")
     void auditFieldsAreNullInitially() {
         Product product = new Product();
->>>>>>> Stashed changes
         assertThat(product.getCreatedAt()).isNull();
         assertThat(product.getUpdatedAt()).isNull();
->>>>>>> Stashed changes
     }
 
     @Test
