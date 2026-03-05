@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Product Entity")
 class ProductEntityTest {
 
-    // Default values
     @Test
     @DisplayName("active defaults to true on a new instance")
     void defaultActiveIsTrue() {
@@ -19,8 +18,14 @@ class ProductEntityTest {
     }
 
     @Test
+<<<<<<< Updated upstream
     @DisplayName("createdAt and updatedAt are null before being persisted by the container")
     void auditFieldsAreNullInitially() {
+=======
+<<<<<<< Updated upstream
+    @DisplayName("createdAt is null before prePersist is called")
+    void createdAtIsNullBeforePersist() {
+>>>>>>> Stashed changes
         Product product = new Product();
 <<<<<<< Updated upstream
         assertThat(product.getCreatedAt()).isNull();
@@ -54,12 +59,17 @@ class ProductEntityTest {
         assertThat(product.getCreatedAt())
                 .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.SECONDS));
 =======
+<<<<<<< Updated upstream
+=======
+    @DisplayName("audit fields are null initially before persistence")
+    void auditFieldsAreNullInitially() {
+        Product product = new Product();
+>>>>>>> Stashed changes
         assertThat(product.getCreatedAt()).isNull();
         assertThat(product.getUpdatedAt()).isNull();
 >>>>>>> Stashed changes
     }
 
-    // Setters / getters basic contract
     @Test
     @DisplayName("setters propagate values correctly to getters")
     void settersAndGetters() {
