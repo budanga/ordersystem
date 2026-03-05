@@ -3,8 +3,10 @@ package com.budanga.ordersystem.controller;
 import com.budanga.ordersystem.entity.Order;
 import com.budanga.ordersystem.entity.OrderItem;
 import com.budanga.ordersystem.entity.Product;
+import com.budanga.ordersystem.entity.User;
 import com.budanga.ordersystem.repository.OrderRepository;
 import com.budanga.ordersystem.repository.ProductRepository;
+import com.budanga.ordersystem.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,8 +26,10 @@ import org.springframework.web.context.WebApplicationContext;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -53,6 +58,12 @@ class OrderControllerTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private MockMvc mockMvc;
 
@@ -89,6 +100,34 @@ class OrderControllerTest {
     private <T extends MockHttpServletRequestBuilder> T auth(T builder) {
         builder.header("Authorization", bearerToken);
         return builder;
+    }
+
+    private <T extends MockHttpServletRequestBuilder> T adminAuth(T builder) throws Exception {
+        builder.header("Authorization", obtainAdminToken());
+        return builder;
+    }
+
+    private String obtainAdminToken() throws Exception {
+        String username = "admin_" + System.nanoTime();
+        Set<String> roles = new HashSet<>();
+        roles.add("ROLE_USER");
+        roles.add("ROLE_ADMIN");
+
+        User admin = User.builder()
+                .username(username)
+                .password(passwordEncoder.encode("password123"))
+                .roles(roles)
+                .build();
+        userRepository.save(admin);
+
+        String body = objectMapper.writeValueAsString(Map.of("username", username, "password", "password123"));
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isOk())
+                .andReturn();
+        String token = objectMapper.readTree(result.getResponse().getContentAsString()).get("accessToken").textValue();
+        return "Bearer " + token;
     }
 
     // ─── DB helpers ──────────────────────────────────────────────────────────
@@ -425,7 +464,7 @@ class OrderControllerTest {
             Order saved = saveOrder("Alice", BigDecimal.TEN, false);
             String body = objectMapper.writeValueAsString(Map.of("completed", true));
 
-            mockMvc.perform(auth(put(BASE + "/{id}", saved.getId())
+            mockMvc.perform(adminAuth(put(BASE + "/{id}", saved.getId())
                     .contentType(MediaType.APPLICATION_JSON).content(body)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.completed").value(true));
@@ -436,7 +475,7 @@ class OrderControllerTest {
         void notFound() throws Exception {
             String body = objectMapper.writeValueAsString(Map.of("completed", true));
 
-            mockMvc.perform(auth(put(BASE + "/999999")
+            mockMvc.perform(adminAuth(put(BASE + "/999999")
                     .contentType(MediaType.APPLICATION_JSON).content(body)))
                     .andExpect(status().isNotFound());
         }
@@ -453,7 +492,7 @@ class OrderControllerTest {
         void success() throws Exception {
             Order saved = saveOrder("Alice", BigDecimal.TEN, false);
 
-            mockMvc.perform(auth(delete(BASE + "/{id}", saved.getId())))
+            mockMvc.perform(adminAuth(delete(BASE + "/{id}", saved.getId())))
                     .andExpect(status().isOk());
         }
 
@@ -462,7 +501,7 @@ class OrderControllerTest {
         void cannotDeleteCompleted() throws Exception {
             Order saved = saveOrder("Alice", BigDecimal.TEN, true);
 
-            mockMvc.perform(auth(delete(BASE + "/{id}", saved.getId())))
+            mockMvc.perform(adminAuth(delete(BASE + "/{id}", saved.getId())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value(containsString("Completed orders")));
         }
@@ -470,7 +509,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("404: returns error for unknown order id")
         void notFound() throws Exception {
-            mockMvc.perform(auth(delete(BASE + "/999999")))
+            mockMvc.perform(adminAuth(delete(BASE + "/999999")))
                     .andExpect(status().isNotFound());
         }
     }
@@ -486,7 +525,7 @@ class OrderControllerTest {
         void markComplete() throws Exception {
             Order saved = saveOrder("Alice", BigDecimal.TEN, false);
 
-            mockMvc.perform(auth(patch(BASE + "/{id}/complete", saved.getId())))
+            mockMvc.perform(adminAuth(patch(BASE + "/{id}/complete", saved.getId())))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.completed").value(true));
         }
@@ -494,7 +533,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("/complete: returns 404 for unknown id")
         void markComplete_notFound() throws Exception {
-            mockMvc.perform(auth(patch(BASE + "/999999/complete")))
+            mockMvc.perform(adminAuth(patch(BASE + "/999999/complete")))
                     .andExpect(status().isNotFound());
         }
 
@@ -503,7 +542,7 @@ class OrderControllerTest {
         void markUncomplete() throws Exception {
             Order saved = saveOrder("Alice", BigDecimal.TEN, true);
 
-            mockMvc.perform(auth(patch(BASE + "/{id}/uncomplete", saved.getId())))
+            mockMvc.perform(adminAuth(patch(BASE + "/{id}/uncomplete", saved.getId())))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.completed").value(false));
         }
@@ -511,7 +550,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("/uncomplete: returns 404 for unknown id")
         void markUncomplete_notFound() throws Exception {
-            mockMvc.perform(auth(patch(BASE + "/999999/uncomplete")))
+            mockMvc.perform(adminAuth(patch(BASE + "/999999/uncomplete")))
                     .andExpect(status().isNotFound());
         }
     }
