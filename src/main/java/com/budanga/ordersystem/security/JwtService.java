@@ -4,6 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class JwtService {
 
     @Value("${app.jwt.secret}")
@@ -22,6 +25,20 @@ public class JwtService {
 
     @Value("${app.jwt.expiration}")
     private long expirationMs;
+
+    @PostConstruct
+    public void validateConfig() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("JWT_SECRET environment variable is missing!");
+        }
+        if (secretKey.length() < 32) {
+            log.warn("JWT_SECRET is too short for HS256 algorithm. It should be at least 32 characters.");
+        }
+        if (expirationMs <= 0) {
+            throw new IllegalStateException("JWT_EXPIRATION must be a positive number!");
+        }
+        log.info("JWT configuration validated successfully.");
+    }
 
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
