@@ -4,6 +4,7 @@ import com.budanga.ordersystem.dto.CreateProductDTO;
 import com.budanga.ordersystem.dto.ProductDTO;
 import com.budanga.ordersystem.dto.UpdateProductDTO;
 import com.budanga.ordersystem.entity.Product;
+import com.budanga.ordersystem.exception.ResourceNotFoundException;
 import com.budanga.ordersystem.repository.ProductRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -138,12 +139,12 @@ class ProductServiceTest {
         }
 
         @Test
-        @DisplayName("throws when product id does not exist")
+        @DisplayName("throws ResourceNotFoundException when product id does not exist")
         void throws_whenProductNotFound() {
             when(productRepository.findById(999L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> productService.updateProduct(999L, new UpdateProductDTO()))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("not found");
         }
 
@@ -212,12 +213,12 @@ class ProductServiceTest {
         }
 
         @Test
-        @DisplayName("throws IllegalArgumentException when product does not exist")
+        @DisplayName("throws ResourceNotFoundException when product does not exist")
         void throws_whenProductNotFound() {
             when(productRepository.findById(42L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> productService.getProductById(42L))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("not found");
         }
     }
