@@ -4,11 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
-import java.time.temporal.ChronoUnit;
 
 @DisplayName("Product Entity")
 class ProductEntityTest {
@@ -22,10 +19,15 @@ class ProductEntityTest {
     }
 
     @Test
-    @DisplayName("createdAt is null before prePersist is called")
-    void createdAtIsNullBeforePersist() {
+    @DisplayName("createdAt and updatedAt are null before being persisted by the container")
+    void auditFieldsAreNullInitially() {
         Product product = new Product();
+<<<<<<< Updated upstream
         assertThat(product.getCreatedAt()).isNull();
+=======
+<<<<<<< Updated upstream
+        assertThat(product.getCreationDate()).isNull();
+>>>>>>> Stashed changes
     }
 
     // @PrePersist lifecycle hook
@@ -51,6 +53,10 @@ class ProductEntityTest {
 
         assertThat(product.getCreatedAt())
                 .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.SECONDS));
+=======
+        assertThat(product.getCreatedAt()).isNull();
+        assertThat(product.getUpdatedAt()).isNull();
+>>>>>>> Stashed changes
     }
 
     // Setters / getters basic contract
