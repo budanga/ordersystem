@@ -55,7 +55,7 @@ class AuthControllerTest {
         class Register {
 
                 @Test
-                @DisplayName("201: registers a new user and returns a JWT token")
+                @DisplayName("201: registers a new user and returns tokens")
                 void success() throws Exception {
                         mockMvc.perform(post(BASE + "/register")
                                         .contentType(MediaType.APPLICATION_JSON)
@@ -63,8 +63,8 @@ class AuthControllerTest {
                                                         {"username":"newuser","password":"password123"}
                                                         """))
                                         .andExpect(status().isCreated())
-                                        .andExpect(jsonPath("$.token").isString())
-                                        .andExpect(jsonPath("$.token").isNotEmpty());
+                                        .andExpect(jsonPath("$.accessToken").isString())
+                                        .andExpect(jsonPath("$.refreshToken").isString());
                 }
 
                 @Test
@@ -125,7 +125,7 @@ class AuthControllerTest {
                 }
 
                 @Test
-                @DisplayName("200: returns JWT token for valid credentials")
+                @DisplayName("200: returns tokens for valid credentials")
                 void success() throws Exception {
                         mockMvc.perform(post(BASE + "/login")
                                         .contentType(MediaType.APPLICATION_JSON)
@@ -133,8 +133,8 @@ class AuthControllerTest {
                                                         {"username":"loginuser","password":"correctpass"}
                                                         """))
                                         .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.token").isString())
-                                        .andExpect(jsonPath("$.token").isNotEmpty());
+                                        .andExpect(jsonPath("$.accessToken").isString())
+                                        .andExpect(jsonPath("$.refreshToken").isString());
                 }
 
                 @Test
@@ -157,6 +157,49 @@ class AuthControllerTest {
                                                         {"username":"nobody","password":"password123"}
                                                         """))
                                         .andExpect(status().isUnauthorized());
+                }
+        }
+
+        // ─── POST /api/auth/refresh ──────────────────────────────────────────────
+
+        @Nested
+        @DisplayName("POST /api/auth/refresh")
+        class Refresh {
+
+                private String refreshToken;
+
+                @BeforeEach
+                void setup() throws Exception {
+                        String response = mockMvc.perform(post(BASE + "/register")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("""
+                                                        {"username":"refreshuser","password":"password123"}
+                                                        """))
+                                        .andReturn().getResponse().getContentAsString();
+
+                        com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper()
+                                        .readTree(response);
+                        refreshToken = node.get("refreshToken").asText();
+                }
+
+                @Test
+                @DisplayName("200: returns a new access token")
+                void success() throws Exception {
+                        mockMvc.perform(post(BASE + "/refresh")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(String.format("{\"refreshToken\":\"%s\"}", refreshToken)))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.accessToken").isString())
+                                        .andExpect(jsonPath("$.refreshToken").value(refreshToken));
+                }
+
+                @Test
+                @DisplayName("RuntimeException: fails with unknown token")
+                void failUnknown() throws Exception {
+                        mockMvc.perform(post(BASE + "/refresh")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{\"refreshToken\":\"invalid-token\"}"))
+                                        .andExpect(status().isInternalServerError());
                 }
         }
 

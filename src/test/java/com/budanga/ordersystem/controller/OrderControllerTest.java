@@ -80,7 +80,7 @@ class OrderControllerTest {
                 .content(body))
                 .andExpect(status().isCreated())
                 .andReturn();
-        String token = objectMapper.readTree(result.getResponse().getContentAsString()).get("token").textValue();
+        String token = objectMapper.readTree(result.getResponse().getContentAsString()).get("accessToken").textValue();
         return "Bearer " + token;
     }
 

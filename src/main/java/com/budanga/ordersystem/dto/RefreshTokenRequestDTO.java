@@ -8,11 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthRequestDTO {
-
-    @NotBlank(message = "Username is required")
-    private String username;
-
-    @NotBlank(message = "Password is required")
-    private String password;
+public class RefreshTokenRequestDTO {
+    @NotBlank
+    private String refreshToken;
 }
