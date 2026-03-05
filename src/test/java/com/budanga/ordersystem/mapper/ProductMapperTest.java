@@ -91,7 +91,7 @@ class ProductMapperTest {
         Product product = ProductMapper.fromCreateDTO(createDTO);
 
         assertThat(product.getId()).isNull();
-        assertThat(product.getCreationDate()).isNull();
+        assertThat(product.getCreatedAt()).isNull();
     }
 
     @Test

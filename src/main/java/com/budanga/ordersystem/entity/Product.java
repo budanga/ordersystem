@@ -3,13 +3,16 @@ package com.budanga.ordersystem.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "products")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Product {
-
-    public Product() {
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,45 +36,5 @@ public class Product {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public BigDecimal getPrice() {
-        return this.price;
-    }
-
-    public Integer getStock() {
-        return this.stock;
-    }
-
-    public Boolean getActive() {
-        return this.active;
-    }
-
-    public LocalDateTime getCreationDate() {
-        return this.createdAt;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public void setStock(Integer stock) {
-        this.stock = stock;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
     }
 }
