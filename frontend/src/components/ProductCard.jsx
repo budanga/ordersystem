@@ -18,6 +18,10 @@ export function ProductCard({ product, viewMode = 'grid' }) {
                         className={`w-full h-full object-cover transition-transform duration-500 ${!isOut ? 'group-hover:scale-110' : 'opacity-60 grayscale'}`}
                         src={product.imageUrl || "https://placehold.co/600x600/121212/F27324?text=No+Image"}
                         alt={product.name}
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://placehold.co/600x600/121212/F27324?text=No+Image";
+                        }}
                     />
                     {isOut && (
                         <div className="absolute top-4 left-4">
@@ -75,6 +79,10 @@ export function ProductCard({ product, viewMode = 'grid' }) {
                     className={`w-full h-full object-cover transition-transform duration-500 ${!isOut ? 'group-hover:scale-110' : 'opacity-60 grayscale'}`}
                     src={product.imageUrl || "https://placehold.co/600x600/121212/F27324?text=No+Image"}
                     alt={product.name}
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://placehold.co/600x600/121212/F27324?text=No+Image";
+                    }}
                 />
 
                 {isOut && (
