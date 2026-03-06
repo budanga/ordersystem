@@ -5,8 +5,9 @@ const AppContext = createContext();
 
 export function AppProvider({ children }) {
     // UI State
-    const [activePage, setActivePage] = useState('home'); // 'home' or 'catalog'
+    const [activePage, setActivePage] = useState('home'); // 'home', 'catalog', 'product-details', etc.
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     // Filter State
     const [searchQuery, setSearchQuery] = useState('');
@@ -142,6 +143,12 @@ export function AppProvider({ children }) {
         return past.toLocaleDateString();
     };
 
+    const viewProductDetails = (product) => {
+        setSelectedProduct(product);
+        setActivePage('product-details');
+        window.scrollTo(0, 0);
+    };
+
     return (
         <AppContext.Provider value={{
             activePage, setActivePage,
@@ -157,7 +164,8 @@ export function AppProvider({ children }) {
             resetFilters,
             categories,
             notifications, setNotifications, clearDropdownNotifications, markAllNotificationsAsRead, formatTimeAgo,
-            checkout
+            checkout,
+            selectedProduct, setSelectedProduct, viewProductDetails
         }}>
             {children}
         </AppContext.Provider>

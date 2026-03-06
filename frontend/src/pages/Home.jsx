@@ -70,7 +70,7 @@ export function Home() {
 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="text-center">
-                            <h3 className="text-white text-5xl lg:text-8xl font-extralight tracking-[0.3em] uppercase mb-2 drop-shadow-2xl">
+                            <h3 className="text-white text-5xl lg:text-7xl font-extralight tracking-[0.3em] uppercase mb-2 drop-shadow-2xl">
                                 All
                             </h3>
                             <div className="h-px w-0 group-hover:w-full bg-white/30 transition-all duration-700 mx-auto"></div>
