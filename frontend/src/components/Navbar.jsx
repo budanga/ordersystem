@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 
 export function Navbar() {
-    const { activePage, setActivePage, searchQuery, setSearchQuery, cart, removeFromCart, updateCartQuantity, notifications, clearDropdownNotifications, markAllNotificationsAsRead } = useAppContext();
+    const { activePage, setActivePage, searchQuery, setSearchQuery, cart, removeFromCart, updateCartQuantity, notifications, clearDropdownNotifications, markAllNotificationsAsRead, formatTimeAgo, checkout } = useAppContext();
 
     // Search History State
     const [searchHistory, setSearchHistory] = useState(() => {
@@ -184,7 +184,7 @@ export function Navbar() {
                         </button>
 
                         {shouldRenderCart && (
-                            <div className={`absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 flex flex-col max-h-[80vh] origin-top-right ${isCartOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
+                            <div className={`absolute right-0 top-full mt-2 w-[420px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 flex flex-col max-h-[80vh] origin-top-right ${isCartOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
                                 <div className="p-4 border-b border-slate-100 dark:border-slate-700">
                                     <h3 className="font-bold text-slate-900 dark:text-[#F2F8FC]">Your Cart ({cartItemsCount})</h3>
                                 </div>
@@ -232,7 +232,13 @@ export function Navbar() {
                                             <span className="text-sm font-medium text-slate-500">Total</span>
                                             <span className="text-lg font-black text-slate-900 dark:text-[#F2F8FC]">${cartTotal.toFixed(2)}</span>
                                         </div>
-                                        <button className="w-full py-3 bg-primary text-white font-bold rounded-xl cursor-pointer shadow-lg shadow-primary/20">
+                                        <button 
+                                            onClick={async () => {
+                                                const success = await checkout();
+                                                if (success) setIsCartOpen(false);
+                                            }}
+                                            className="w-full py-3 bg-primary text-white font-bold rounded-xl cursor-pointer shadow-lg shadow-primary/20"
+                                        >
                                             Checkout Now
                                         </button>
                                     </div>
@@ -272,13 +278,13 @@ export function Navbar() {
                                         <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
                                             {[...notifications].filter(n => !n.cleared).sort((a, b) => b.id - a.id).slice(0, 5).map(notif => {
                                                 const config = {
-                                                    order_success: { icon: 'check_circle', color: 'text-green-500', bg: 'bg-green-500/10' },
-                                                    order_cancelled: { icon: 'cancel', color: 'text-red-500', bg: 'bg-red-500/10' },
-                                                    order_completed: { icon: 'verified', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                                                    abandoned_cart: { icon: 'shopping_cart_off', color: 'text-orange-500', bg: 'bg-orange-500/10' },
-                                                    low_stock: { icon: 'warning', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-                                                    new_products: { icon: 'new_releases', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-                                                    special_offer: { icon: 'local_offer', color: 'text-pink-500', bg: 'bg-pink-500/10' }
+                                                    ORDER_SUCCESS: { icon: 'check_circle', color: 'text-green-500', bg: 'bg-green-500/10' },
+                                                    ORDER_CANCELLED: { icon: 'cancel', color: 'text-red-500', bg: 'bg-red-500/10' },
+                                                    ORDER_COMPLETED: { icon: 'verified', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                                                    ABANDONED_CART: { icon: 'shopping_cart_off', color: 'text-orange-500', bg: 'bg-orange-500/10' },
+                                                    LOW_STOCK: { icon: 'warning', color: 'text-amber-500', bg: 'bg-amber-500/10' },
+                                                    NEW_PRODUCTS: { icon: 'new_releases', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+                                                    SPECIAL_OFFER: { icon: 'local_offer', color: 'text-pink-500', bg: 'bg-pink-500/10' }
                                                 }[notif.type] || { icon: 'info', color: 'text-slate-500', bg: 'bg-slate-500/10' };
 
                                                 return (
@@ -291,8 +297,8 @@ export function Navbar() {
                                                                 {notif.text}
                                                             </p>
                                                         </div>
-                                                        <span className="absolute top-3 right-4 text-[10px] text-slate-400 uppercase font-black tracking-tight">
-                                                            {notif.date}
+                                                        <span className="absolute top-3 right-4 text-[10px] text-slate-400 uppercase font-black tracking-tight" title={new Date(notif.createdAt).toLocaleString()}>
+                                                            {formatTimeAgo(notif.createdAt)}
                                                         </span>
                                                         {!notif.read && (
                                                             <div className="absolute right-2 bottom-3">
