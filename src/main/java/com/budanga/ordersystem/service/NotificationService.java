@@ -64,4 +64,11 @@ public class NotificationService {
                 .toList();
         notificationRepository.saveAll(notifications);
     }
+    @Transactional
+    public void markAsRead(Long id) {
+        notificationRepository.findById(id).ifPresent(n -> {
+            n.setRead(true);
+            notificationRepository.save(n);
+        });
+    }
 }

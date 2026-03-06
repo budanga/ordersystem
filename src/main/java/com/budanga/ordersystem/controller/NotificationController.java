@@ -42,4 +42,10 @@ public class NotificationController {
     public void clearAll(@AuthenticationPrincipal User user) {
         notificationService.clearAll(user);
     }
+
+    @PatchMapping("/{id}/read")
+    @Operation(summary = "Mark a single notification as read")
+    public void markAsRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
+    }
 }
