@@ -2,6 +2,7 @@ package com.budanga.ordersystem.controller;
 
 import com.budanga.ordersystem.dto.AuthRequestDTO;
 import com.budanga.ordersystem.dto.RegisterRequestDTO;
+import com.budanga.ordersystem.dto.UpdateProfileRequestDTO;
 import com.budanga.ordersystem.dto.RefreshTokenRequestDTO;
 import com.budanga.ordersystem.dto.TokenResponseDTO;
 import com.budanga.ordersystem.entity.RefreshToken;
@@ -140,6 +141,47 @@ public class AuthController {
         refreshTokenService.findByToken(request.getRefreshToken())
                 .map(RefreshToken::getUser)
                 .ifPresent(user -> refreshTokenService.deleteByUserId(user.getId()));
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody UpdateProfileRequestDTO request, java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
+        }
+        
+        User user = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getUsername().equals(request.getUsername()) && userRepository.existsByUsername(request.getUsername())) {
+             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username is already taken");
+        }
+        
+        if (!user.getEmail().equals(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
+             return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already taken");
+        }
+        
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setAddress(request.getAddress());
+        
+        user = userRepository.save(user);
+        
+        String accessToken = jwtService.generateToken(user);
+        com.budanga.ordersystem.entity.RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+
+        return ResponseEntity.ok(TokenResponseDTO.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken.getToken())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phoneNumber(user.getPhoneNumber())
+                .address(user.getAddress())
+                .build());
     }
 }
