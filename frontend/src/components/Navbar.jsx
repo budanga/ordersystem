@@ -2,26 +2,23 @@ import { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 
 export function Navbar() {
-    const { activePage, setActivePage, searchQuery, setSearchQuery, cart, removeFromCart, updateCartQuantity, notifications, clearDropdownNotifications, markAllNotificationsAsRead, formatTimeAgo, checkout } = useAppContext();
+    const { 
+        activePage, setActivePage, 
+        searchQuery, setSearchQuery, 
+        cart, removeFromCart, updateCartQuantity, 
+        notifications, clearDropdownNotifications, markAllNotificationsAsRead, formatTimeAgo, 
+        checkout,
+        searchHistory, setSearchHistory, addToSearchHistory 
+    } = useAppContext();
 
-    // Search History State
-    const [searchHistory, setSearchHistory] = useState(() => {
-        const saved = localStorage.getItem('searchHistory');
-        return saved ? JSON.parse(saved) : [];
-    });
     const [isSearchFocused, setIsSearchFocused] = useState(false);
-
-    // Save history to localStorage
-    useEffect(() => {
-        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-    }, [searchHistory]);
 
     // Clear search query is handled by specific interaction clicks instead of broadly listening to activePage
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
-        if (searchQuery.trim() && !searchHistory.includes(searchQuery.trim())) {
-            setSearchHistory(prev => [searchQuery.trim(), ...prev].slice(0, 5)); // Keep last 5
+        if (searchQuery.trim()) {
+            addToSearchHistory(searchQuery);
         }
         if (searchQuery.trim()) {
             setIsSearchFocused(false);
@@ -125,7 +122,13 @@ export function Navbar() {
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
                         <input
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setSearchQuery(val);
+                                if (activePage !== 'catalog' && val.trim() !== '') {
+                                    setActivePage('catalog');
+                                }
+                            }}
                             onFocus={() => setIsSearchFocused(true)}
                             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                             className="w-full bg-slate-100 dark:bg-slate-800/50 border-none focus:outline-none focus:ring-2 focus:ring-primary/80 rounded-xl pl-10 pr-4 py-2 text-sm transition-all duration-200 ease-out placeholder:text-slate-500 text-slate-900 dark:text-[#F2F8FC] focus:bg-white dark:focus:bg-slate-800"

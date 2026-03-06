@@ -10,11 +10,28 @@ export function AppProvider({ children }) {
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     // Filter State
+    const [searchHistory, setSearchHistory] = useState(() => {
+        const saved = localStorage.getItem('searchHistory');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    useEffect(() => {
+        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+    }, [searchHistory]);
+
+    const addToSearchHistory = (query) => {
+        const trimmed = query.trim();
+        if (!trimmed) return;
+        setSearchHistory(prev => {
+            const filtered = prev.filter(h => h !== trimmed);
+            return [trimmed, ...filtered].slice(0, 5);
+        });
+    };
+
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [priceRange, setPriceRange] = useState([0, 5000]);
     const [inStockOnly, setInStockOnly] = useState(false);
-
     const [sortBy, setSortBy] = useState('name,asc');
 
     // Pagination
@@ -144,6 +161,9 @@ export function AppProvider({ children }) {
     };
 
     const viewProductDetails = (product) => {
+        if (searchQuery.trim()) {
+            addToSearchHistory(searchQuery);
+        }
         setSelectedProduct(product);
         setActivePage('product-details');
         window.scrollTo(0, 0);
@@ -165,7 +185,8 @@ export function AppProvider({ children }) {
             categories,
             notifications, setNotifications, clearDropdownNotifications, markAllNotificationsAsRead, formatTimeAgo,
             checkout,
-            selectedProduct, setSelectedProduct, viewProductDetails
+            selectedProduct, setSelectedProduct, viewProductDetails,
+            searchHistory, setSearchHistory, addToSearchHistory
         }}>
             {children}
         </AppContext.Provider>
