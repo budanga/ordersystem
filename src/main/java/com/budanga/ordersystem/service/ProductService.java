@@ -18,13 +18,16 @@ import com.budanga.ordersystem.entity.Product;
 import com.budanga.ordersystem.exception.ResourceNotFoundException;
 import com.budanga.ordersystem.mapper.ProductMapper;
 import com.budanga.ordersystem.repository.ProductRepository;
+import com.budanga.ordersystem.entity.NotificationType;
 
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
+    private final NotificationService notificationService;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, NotificationService notificationService) {
         this.productRepository = productRepository;
+        this.notificationService = notificationService;
     }
 
     public ProductDTO createProduct(CreateProductDTO createDTO) {
@@ -42,7 +45,13 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
 
         // Return the saved product converted to DTO
-        return ProductMapper.toDTO(savedProduct);
+        ProductDTO savedDTO = ProductMapper.toDTO(savedProduct);
+
+        // Notify everyone about the new arrival
+        notificationService.createNotificationForAllUsers(NotificationType.NEW_PRODUCTS, 
+            "New Arrival: " + savedDTO.getName() + " is now available! Check it out in the catalog.");
+
+        return savedDTO;
     }
 
     public ProductDTO updateProduct(Long productId, UpdateProductDTO updateDTO) {

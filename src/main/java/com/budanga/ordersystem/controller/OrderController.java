@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.budanga.ordersystem.entity.User;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -32,8 +34,8 @@ public class OrderController {
 
     @PostMapping
     @Operation(summary = "Create a new order", description = "Validates stock, decrements it, and calculates totals.")
-    public OrderDTO createOrder(@Valid @RequestBody CreateOrderDTO createDTO) {
-        return orderService.createOrder(createDTO);
+    public OrderDTO createOrder(@Valid @RequestBody CreateOrderDTO createDTO, @AuthenticationPrincipal User user) {
+        return orderService.createOrder(createDTO, user);
     }
 
     @GetMapping("/{id}")
@@ -42,14 +44,14 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public OrderDTO updateOrder(@PathVariable("id") Long orderId, @Valid @RequestBody UpdateOrderDTO updateDTO) {
-        return orderService.updateOrder(orderId, updateDTO);
+    public OrderDTO updateOrder(@PathVariable("id") Long orderId, @Valid @RequestBody UpdateOrderDTO updateDTO, @AuthenticationPrincipal User user) {
+        return orderService.updateOrder(orderId, updateDTO, user);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteOrder(@PathVariable Long id) {
-        orderService.deleteOrder(id);
+    public void deleteOrder(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        orderService.deleteOrder(id, user);
     }
 
     @GetMapping
@@ -129,14 +131,14 @@ public class OrderController {
 
     @PatchMapping("/{id}/complete")
     @PreAuthorize("hasRole('ADMIN')")
-    public OrderDTO markOrderAsCompleted(@PathVariable("id") Long orderId) {
-        return orderService.markAsCompleted(orderId);
+    public OrderDTO markOrderAsCompleted(@PathVariable("id") Long orderId, @AuthenticationPrincipal User user) {
+        return orderService.markAsCompleted(orderId, user);
     }
 
     @PatchMapping("/{id}/uncomplete")
     @PreAuthorize("hasRole('ADMIN')")
-    public OrderDTO markOrderAsUncompleted(@PathVariable("id") Long orderId) {
-        return orderService.markAsUncompleted(orderId);
+    public OrderDTO markOrderAsUncompleted(@PathVariable("id") Long orderId, @AuthenticationPrincipal User user) {
+        return orderService.markAsUncompleted(orderId, user);
     }
 
     @GetMapping("/stats/average")
