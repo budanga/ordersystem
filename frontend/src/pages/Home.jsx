@@ -49,51 +49,73 @@ export function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-                {categories.map((category, index) => {
-                    // Logic for Z-pattern:
-                    // Row 1: Large (index 0, span 7), Small (index 1, span 5)
-                    // Row 2: Small (index 2, span 5), Large (index 3, span 7)
-                    // Row 3: Large (index 4, span 7), Small (index 5, span 5)
-                    const isEvenRow = Math.floor(index / 2) % 2 === 0;
-                    const isFirstInRow = index % 2 === 0;
-
-                    let colSpan = "md:col-span-6"; // Default
-                    if (isEvenRow) {
-                        colSpan = isFirstInRow ? "md:col-span-7" : "md:col-span-5";
-                    } else {
-                        colSpan = isFirstInRow ? "md:col-span-5" : "md:col-span-7";
+                {(() => {
+                    let cols = 1;
+                    if (typeof window !== 'undefined') {
+                        if (window.innerWidth >= 768) cols = 2;
+                    }
+                    const getSortValue = (c, r) => {
+                        const L = Math.max(c, r);
+                        const d = (c === L) ? r : c;
+                        const isTopRightBranch = (c === L);
+                        return L * 1000 + d * 2 + (isTopRightBranch ? 0 : 1);
+                    };
+                    const indexToRank = {};
+                    if (cols > 1) {
+                        const ranks = categories.map((_, i) => ({
+                            index: i,
+                            val: getSortValue(i % cols, Math.floor(i / cols))
+                        }));
+                        ranks.sort((a, b) => a.val - b.val);
+                        ranks.forEach((r, rank) => {
+                            indexToRank[r.index] = rank;
+                        });
                     }
 
-                    return (
-                        <div
-                            key={category.name}
-                            onClick={() => handleCategoryClick(category.name)}
-                            className={`group relative ${isFirstInRow ^ isEvenRow ? 'aspect-[4/3]' : 'aspect-square'} md:aspect-auto md:h-[500px] rounded-3xl overflow-hidden cursor-pointer bg-slate-100 dark:bg-slate-800 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 animate-dropdown ${colSpan}`}
-                            style={{ animationDelay: `${index * 100}ms` }}
-                        >
+                    return categories.map((category, index) => {
+                        const isEvenRow = Math.floor(index / 2) % 2 === 0;
+                        const isFirstInRow = index % 2 === 0;
+
+                        let colSpan = "md:col-span-6"; // Default
+                        if (isEvenRow) {
+                            colSpan = isFirstInRow ? "md:col-span-7" : "md:col-span-5";
+                        } else {
+                            colSpan = isFirstInRow ? "md:col-span-5" : "md:col-span-7";
+                        }
+
+                        const delayIndex = cols > 1 ? indexToRank[index] : index;
+
+                        return (
                             <div
-                                className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
-                                style={{
-                                    backgroundImage: `linear-gradient(to top, rgba(18, 18, 18, 0.9), rgba(18, 18, 18, 0.1)), url("${category.image}")`
-                                }}
-                            />
+                                key={category.name}
+                                onClick={() => handleCategoryClick(category.name)}
+                                className={`group relative ${isFirstInRow ^ isEvenRow ? 'aspect-[4/3]' : 'aspect-square'} md:aspect-auto md:h-[500px] rounded-3xl overflow-hidden cursor-pointer bg-slate-100 dark:bg-slate-800 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 animate-dropdown ${colSpan}`}
+                                style={{ animationDelay: `${delayIndex * 100}ms`, animationFillMode: 'both' }}
+                            >
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
+                                    style={{
+                                        backgroundImage: `linear-gradient(to top, rgba(18, 18, 18, 0.9), rgba(18, 18, 18, 0.1)), url("${category.image}")`
+                                    }}
+                                />
 
-                            <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-                                <span className="text-white text-xs font-bold tracking-[0.4em] uppercase mb-3">Explore Collection</span>
-                                <div className="w-12 h-1 bg-primary rounded-full shadow-[0_0_15px_rgba(242,115,36,0.5)]"></div>
-                            </div>
+                                <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+                                    <span className="text-white text-xs font-bold tracking-[0.4em] uppercase mb-3">Explore Collection</span>
+                                    <div className="w-12 h-1 bg-primary rounded-full shadow-[0_0_15px_rgba(242,115,36,0.5)]"></div>
+                                </div>
 
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="text-center">
-                                    <h3 className="text-white text-4xl font-extralight tracking-[0.3em] uppercase mb-2 drop-shadow-2xl">
-                                        {category.name}
-                                    </h3>
-                                    <div className="h-px w-0 group-hover:w-full bg-white/30 transition-all duration-700 mx-auto"></div>
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div className="text-center">
+                                        <h3 className="text-white text-4xl font-extralight tracking-[0.3em] uppercase mb-2 drop-shadow-2xl">
+                                            {category.name}
+                                        </h3>
+                                        <div className="h-px w-0 group-hover:w-full bg-white/30 transition-all duration-700 mx-auto"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    });
+                })()}
             </div>
 
             <footer className="mt-24 pt-12 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-8 text-slate-500">
