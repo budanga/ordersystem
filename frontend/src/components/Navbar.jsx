@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 
 export function Navbar() {
-    const { activePage, setActivePage, searchQuery, setSearchQuery, cart, removeFromCart, updateCartQuantity } = useAppContext();
+    const { activePage, setActivePage, searchQuery, setSearchQuery, cart, removeFromCart, updateCartQuantity, notifications, clearDropdownNotifications, markAllNotificationsAsRead } = useAppContext();
 
     // Search History State
     const [searchHistory, setSearchHistory] = useState(() => {
@@ -41,6 +41,7 @@ export function Navbar() {
     const cartRef = useRef(null);
     const notifRef = useRef(null);
     const profileRef = useRef(null);
+    const isFirstRender = useRef(true);
 
     // Render states for exit animation
     const [shouldRenderCart, setShouldRenderCart] = useState(false);
@@ -80,7 +81,12 @@ export function Navbar() {
             setShouldRenderNotif(true);
             setIsCartOpen(false);
             setIsProfileOpen(false);
+            isFirstRender.current = false;
         } else {
+            // Only mark as read if it was previously open (not on mount)
+            if (!isFirstRender.current) {
+                markAllNotificationsAsRead();
+            }
             const timer = setTimeout(() => setShouldRenderNotif(false), 120);
             return () => clearTimeout(timer);
         }
@@ -239,13 +245,78 @@ export function Navbar() {
                     <div className="relative" ref={notifRef}>
                         <button
                             onClick={() => setIsNotifOpen(!isNotifOpen)}
-                            className={`h-10 w-10 flex items-center justify-center rounded-lg transition-all active:scale-98 cursor-pointer ${isNotifOpen ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                            className={`relative h-10 w-10 flex items-center justify-center rounded-lg transition-all active:scale-98 cursor-pointer ${isNotifOpen ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                         >
                             <span className="material-symbols-outlined">notifications</span>
+                            {notifications.filter(n => !n.read).length > 0 && (
+                                <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 border-2 border-white dark:border-slate-800"></span>
+                            )}
                         </button>
                         {shouldRenderNotif && (
-                            <div className={`absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 p-4 text-center text-sm text-slate-500 origin-top-right ${isNotifOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
-                                No new notifications
+                            <div className={`absolute right-0 top-full mt-2 w-[420px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 flex flex-col origin-top-right ${isNotifOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
+                                <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                    <h3 className="font-bold text-slate-900 dark:text-[#F2F8FC]">Notifications</h3>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); clearDropdownNotifications(); }}
+                                        className="text-xs text-slate-400 hover:text-red-500 hover:underline font-medium cursor-pointer"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                                <div className="max-h-96 overflow-y-auto">
+                                    {notifications.filter(n => !n.cleared).length === 0 ? (
+                                        <div className="p-8 text-center text-sm text-slate-500">
+                                            No new notifications
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                                            {[...notifications].filter(n => !n.cleared).sort((a, b) => b.id - a.id).slice(0, 5).map(notif => {
+                                                const config = {
+                                                    order_success: { icon: 'check_circle', color: 'text-green-500', bg: 'bg-green-500/10' },
+                                                    order_cancelled: { icon: 'cancel', color: 'text-red-500', bg: 'bg-red-500/10' },
+                                                    order_completed: { icon: 'verified', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                                                    abandoned_cart: { icon: 'shopping_cart_off', color: 'text-orange-500', bg: 'bg-orange-500/10' },
+                                                    low_stock: { icon: 'warning', color: 'text-amber-500', bg: 'bg-amber-500/10' },
+                                                    new_products: { icon: 'new_releases', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+                                                    special_offer: { icon: 'local_offer', color: 'text-pink-500', bg: 'bg-pink-500/10' }
+                                                }[notif.type] || { icon: 'info', color: 'text-slate-500', bg: 'bg-slate-500/10' };
+
+                                                return (
+                                                    <div key={notif.id} className={`p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer relative ${!notif.read ? 'bg-primary/10 dark:bg-primary/20' : ''}`}>
+                                                        <div className={`h-10 w-10 shrink-0 flex items-center justify-center rounded-full ${config.bg} ${config.color}`}>
+                                                            <span className="material-symbols-outlined text-[20px]">{config.icon}</span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0 pr-14">
+                                                            <p className={`text-[13px] leading-tight line-clamp-2 ${!notif.read ? 'font-black text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                                                {notif.text}
+                                                            </p>
+                                                        </div>
+                                                        <span className="absolute top-3 right-4 text-[10px] text-slate-400 uppercase font-black tracking-tight">
+                                                            {notif.date}
+                                                        </span>
+                                                        {!notif.read && (
+                                                            <div className="absolute right-2 bottom-3">
+                                                                <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-lg shadow-primary/50"></div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="p-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                                    <button
+                                        onClick={() => {
+                                            setActivePage('profile-notifications');
+                                            setIsNotifOpen(false);
+                                        }}
+                                        className="w-full py-2 flex items-center justify-center gap-2 text-primary font-bold text-sm hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                                    >
+                                        See all notifications
+                                        <span className="material-symbols-outlined text-[18px]">keyboard_double_arrow_right</span>
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -265,10 +336,16 @@ export function Navbar() {
 
                         {shouldRenderProfile && (
                             <div className={`absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 py-2 origin-top-right ${isProfileOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
-                                <button className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                <button
+                                    onClick={() => { setActivePage('profile-orders'); setIsProfileOpen(false); }}
+                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                >
                                     My Orders
                                 </button>
-                                <button className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                <button
+                                    onClick={() => { setActivePage('profile-settings'); setIsProfileOpen(false); }}
+                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                >
                                     Account Settings
                                 </button>
                                 <div className="border-t border-slate-100 dark:border-slate-700 my-1"></div>
