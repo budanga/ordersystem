@@ -78,7 +78,7 @@ public class ProductService {
 
     public Page<ProductDTO> searchProducts(String name, String category, BigDecimal minPrice, BigDecimal maxPrice,
             Boolean inStock, Pageable pageable) {
-        Specification<Product> spec = Specification.where((Specification<Product>) null);
+        Specification<Product> spec = (root, query, cb) -> cb.conjunction();
 
         if (name != null && !name.isBlank()) {
             spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
