@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AppContext';
 export function ProductDetails() {
     const { selectedProduct, addToCart, setActivePage } = useAppContext();
     const [quantity, setQuantity] = useState(1);
+    const [mainImage, setMainImage] = useState(selectedProduct?.imageUrl || "");
 
     if (!selectedProduct) {
         return (
@@ -29,6 +30,17 @@ export function ProductDetails() {
         }
     };
 
+    // Use selectedProduct.imageUrl for initial state if mainImage is empty
+    const currentImage = mainImage || selectedProduct.imageUrl || "https://placehold.co/800x800/121212/F27324?text=Product+Image";
+
+    // Mock additional images based on main image if backend doesn't provide a gallery
+    const galleryItems = [
+        selectedProduct.imageUrl,
+        "https://placehold.co/800x800/121212/F27324?text=Detail+1",
+        "https://placehold.co/800x800/121212/F27324?text=Detail+2",
+        "https://placehold.co/800x800/121212/F27324?text=Detail+3"
+    ].filter(Boolean);
+
     return (
         <div className="max-w-7xl mx-auto w-full px-6 py-8 md:px-10 animate-dropdown">
             {/* Breadcrumbs */}
@@ -50,10 +62,11 @@ export function ProductDetails() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 lg:gap-x-20 gap-y-4 mb-24">
                 
                 {/* 1. Large Image & Core Info */}
-                <div className="aspect-square w-full rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 self-start">
+                <div className="aspect-square w-full rounded-3xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 self-start transition-all duration-500">
                     <img
-                        className="w-full h-full object-cover"
-                        src={selectedProduct.imageUrl || "https://placehold.co/800x800/121212/F27324?text=Product+Image"}
+                        className="w-full h-full object-cover animate-fade-in"
+                        key={currentImage}
+                        src={currentImage}
                         alt={selectedProduct.name}
                     />
                 </div>
@@ -118,18 +131,22 @@ export function ProductDetails() {
                     </div>
                 </div>
 
-                {/* 2. Gap/Line Row: This aligns the separator line with the gallery gap */}
+                {/* 2. Gap/Line Row: Aligns separator with gallery gap */}
                 <div className="hidden lg:block h-px"></div>
                 <div className="hidden lg:block border-t border-slate-200 dark:border-slate-800"></div>
 
                 {/* 3. Thumbnails & Shipping Info */}
                 <div className="grid grid-cols-4 gap-4">
-                    {[0, 1, 2, 3].map((i) => (
-                        <div key={i} className={`aspect-square rounded-2xl border-2 ${i === 0 ? 'border-primary' : 'border-slate-200 dark:border-slate-800'} overflow-hidden cursor-pointer hover:border-primary transition-all duration-300`}>
+                    {galleryItems.map((img, i) => (
+                        <div 
+                            key={i} 
+                            onClick={() => setMainImage(img)}
+                            className={`aspect-square rounded-2xl border-2 transition-all duration-300 overflow-hidden cursor-pointer ${currentImage === img ? 'border-primary ring-4 ring-primary/10' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
+                        >
                             <img
-                                src={selectedProduct.imageUrl || "https://placehold.co/200x200/121212/F27324?text=Detail"}
-                                className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                                alt="Detail view"
+                                src={img}
+                                className={`w-full h-full object-cover transition-opacity duration-300 ${currentImage === img ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
+                                alt={`Thumbnail ${i + 1}`}
                             />
                         </div>
                     ))}
