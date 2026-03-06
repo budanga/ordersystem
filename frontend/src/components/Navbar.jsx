@@ -55,10 +55,10 @@ export function Navbar() {
         <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
             <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-8">
                 <div className="flex items-center gap-2 shrink-0">
-                    <div className="bg-primary p-1.5 rounded-lg">
-                        <span className="material-symbols-outlined text-white block">diamond</span>
+                    <div className="bg-primary p-1.5 rounded-lg flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white text-[20px] block">diamond</span>
                     </div>
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">LuxeCore</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-[#F2F8FC]">Budal</h1>
                 </div>
 
                 <div className="flex-1 max-w-2xl relative">
@@ -67,8 +67,8 @@ export function Navbar() {
                         <input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-slate-100 dark:bg-slate-800/50 border-none focus:ring-2 focus:ring-primary rounded-xl pl-10 pr-4 py-2 text-sm transition-all placeholder:text-slate-500 text-slate-900 dark:text-white"
-                            placeholder="Search premium collection..."
+                            className="w-full bg-slate-100 dark:bg-slate-800/50 border-none focus:outline-none focus:ring-2 focus:ring-primary rounded-xl pl-10 pr-4 py-2 text-sm transition-all placeholder:text-slate-500 text-slate-900 dark:text-[#F2F8FC]"
+                            placeholder="Search products"
                             type="text"
                         />
                     </div>
@@ -79,7 +79,7 @@ export function Navbar() {
                     <div className="relative">
                         <button
                             onClick={() => setIsCartOpen(!isCartOpen)}
-                            className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 cursor-pointer"
+                            className="relative h-10 w-10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 cursor-pointer"
                         >
                             <span className="material-symbols-outlined">shopping_cart</span>
                             {cartItemsCount > 0 && (
@@ -92,7 +92,7 @@ export function Navbar() {
                         {shouldRenderCart && (
                             <div className={`absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 flex flex-col max-h-[80vh] origin-top-right ${isCartOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
                                 <div className="p-4 border-b border-slate-100 dark:border-slate-700">
-                                    <h3 className="font-bold text-slate-900 dark:text-white">Your Cart ({cartItemsCount})</h3>
+                                    <h3 className="font-bold text-slate-900 dark:text-[#F2F8FC]">Your Cart ({cartItemsCount})</h3>
                                 </div>
                                 <div className="overflow-y-auto flex-1 p-4 space-y-4">
                                     {cart.length === 0 ? (
@@ -102,7 +102,7 @@ export function Navbar() {
                                             <div key={item.id} className="flex gap-3">
                                                 <img src={item.imageUrl} alt={item.name} className="w-16 h-16 object-cover rounded-lg bg-slate-100 dark:bg-slate-900" />
                                                 <div className="flex-1">
-                                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">{item.name}</h4>
+                                                    <h4 className="text-sm font-bold text-slate-900 dark:text-[#F2F8FC] line-clamp-1">{item.name}</h4>
                                                     <p className="text-primary font-bold mt-1">${Number(item.price).toFixed(2)}</p>
 
                                                     <div className="flex items-center gap-2 mt-2">
@@ -136,7 +136,7 @@ export function Navbar() {
                                     <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-sm font-medium text-slate-500">Total</span>
-                                            <span className="text-lg font-black text-slate-900 dark:text-white">${cartTotal.toFixed(2)}</span>
+                                            <span className="text-lg font-black text-slate-900 dark:text-[#F2F8FC]">${cartTotal.toFixed(2)}</span>
                                         </div>
                                         <button className="w-full py-3 bg-primary text-white font-bold rounded-xl cursor-pointer shadow-lg shadow-primary/20">
                                             Checkout Now
@@ -151,7 +151,7 @@ export function Navbar() {
                     <div className="relative">
                         <button
                             onClick={() => setIsNotifOpen(!isNotifOpen)}
-                            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 cursor-pointer"
+                            className="h-10 w-10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 cursor-pointer"
                         >
                             <span className="material-symbols-outlined">notifications</span>
                         </button>
@@ -168,7 +168,7 @@ export function Navbar() {
                     <div className="relative">
                         <div className="flex items-center gap-3 pl-2 cursor-pointer transition-all active:scale-95" onClick={() => setIsProfileOpen(!isProfileOpen)}>
                             <div className="text-right hidden sm:block">
-                                <p className="text-xs font-medium text-slate-900 dark:text-white leading-none">Alex Rivera</p>
+                                <p className="text-xs font-medium text-slate-900 dark:text-[#F2F8FC] leading-none">Alex Rivera</p>
                                 <p className="text-[10px] text-slate-500 font-medium">Gold Member</p>
                             </div>
                             <div className="h-9 w-9 rounded-full bg-primary/20 border-2 border-primary/30 overflow-hidden cursor-pointer">

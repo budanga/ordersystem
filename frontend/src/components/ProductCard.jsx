@@ -39,7 +39,7 @@ export function ProductCard({ product, viewMode = 'grid' }) {
                                 <span className="text-[10px] text-slate-500 font-medium">{stockStatus}</span>
                             </div>
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-2">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-[#F2F8FC] leading-tight mb-2">
                             {product.name}
                         </h3>
                         <div className="flex items-center gap-0.5 mb-4">
@@ -111,7 +111,7 @@ export function ProductCard({ product, viewMode = 'grid' }) {
                         <span className="text-[10px] text-slate-500 font-medium">{stockStatus}</span>
                     </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-2 truncate" title={product.name}>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-[#F2F8FC] leading-tight mb-2 truncate" title={product.name}>
                     {product.name}
                 </h3>
                 <div className="flex items-center justify-between">

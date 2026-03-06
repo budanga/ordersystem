@@ -78,30 +78,25 @@ export function Catalog() {
     }, [searchQuery, selectedCategory, priceRange, inStockOnly, sortBy, currentPage, setTotalPages]);
 
     return (
-        <>
+        <div className="w-full">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div>
-                    <nav className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                        <span>Store</span>
-                        <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-                        <span className="text-primary font-medium">Premium Catalog</span>
-                    </nav>
-                    <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">Product Catalog</h2>
-                    <p className="text-slate-500 mt-1">Discover our high-end curated selection of essentials.</p>
+                    <span className="text-[10px] text-primary font-bold uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded inline-block mb-1">Store</span>
+                    <h2 className="text-5xl font-extrabold text-slate-900 dark:text-[#F2F8FC] leading-none">Product Catalog</h2>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                         <button
-                            className={`p-1.5 rounded shadow-sm transition-all active:scale-90 cursor-pointer ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                            className={`h-9 w-9 flex items-center justify-center rounded shadow-sm transition-all active:scale-90 cursor-pointer ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-primary' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                             onClick={() => setViewMode('grid')}
                         >
-                            <span className="material-symbols-outlined block">grid_view</span>
+                            <span className="material-symbols-outlined text-[20px] block">grid_view</span>
                         </button>
                         <button
-                            className={`p-1.5 rounded transition-all active:scale-90 cursor-pointer ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                            className={`h-9 w-9 flex items-center justify-center rounded transition-all active:scale-90 cursor-pointer ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                             onClick={() => setViewMode('list')}
                         >
-                            <span className="material-symbols-outlined block">view_list</span>
+                            <span className="material-symbols-outlined text-[20px] block">view_list</span>
                         </button>
                     </div>
 
@@ -111,7 +106,7 @@ export function Catalog() {
                             onClick={() => setIsSortOpen(!isSortOpen)}
                             className="w-full flex items-center justify-between bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-medium py-2 px-4 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer active:scale-95"
                         >
-                            <span>Sort by: {sortOptions[sortBy]}</span>
+                            <span>{sortOptions[sortBy]}</span>
                             <span className={`material-symbols-outlined transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`}>expand_more</span>
                         </button>
 
@@ -191,6 +186,6 @@ export function Catalog() {
                     </button>
                 </div>
             )}
-        </>
+        </div>
     );
 }

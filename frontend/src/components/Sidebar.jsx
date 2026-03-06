@@ -68,7 +68,7 @@ export function Sidebar() {
 
     return (
         <aside className="w-72 shrink-0 border-r border-slate-200 dark:border-slate-800 p-6 hidden lg:block overflow-y-auto">
-            <div className="space-y-8 text-slate-900 dark:text-white">
+            <div className="pt-28 space-y-8 text-slate-900 dark:text-[#F2F8FC]">
                 <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">Categories</h3>
                     <div className="space-y-2">

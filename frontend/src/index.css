@@ -8,7 +8,7 @@
 }
 
 body {
-    @apply bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased;
+    @apply bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-[#F2F8FC] antialiased;
 }
 
 .material-symbols-outlined {
