@@ -1,10 +1,11 @@
 import { useAppContext } from '../context/AppContext';
 
 export function Home() {
-    const { setSelectedCategory, setActivePage } = useAppContext();
+    const { setSelectedCategory, setActivePage, setSearchQuery } = useAppContext();
 
     const handleCategoryClick = (categoryName) => {
         setSelectedCategory(categoryName);
+        setSearchQuery(''); // clear potential left over search text that user typed but not submitted
         setActivePage('catalog');
     };
 

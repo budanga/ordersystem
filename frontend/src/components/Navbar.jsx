@@ -16,10 +16,7 @@ export function Navbar() {
         localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
     }, [searchHistory]);
 
-    // Clear search query when changing main pages (tabs/views)
-    useEffect(() => {
-        setSearchQuery('');
-    }, [activePage, setSearchQuery]);
+    // Clear search query is handled by specific interaction clicks instead of broadly listening to activePage
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -108,7 +105,7 @@ export function Navbar() {
         <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
             <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-8">
                 <div
-                    onClick={() => setActivePage('home')}
+                    onClick={() => { setActivePage('home'); setSearchQuery(''); }}
                     className="flex items-center gap-2 shrink-0 cursor-pointer group active:scale-98 transition-all duration-300 hover:-translate-y-0.5"
                 >
                     <div className="bg-primary p-1.5 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/30">
@@ -136,7 +133,7 @@ export function Navbar() {
                                     <button
                                         type="button"
                                         onMouseDown={(e) => { e.preventDefault(); setSearchHistory([]); }}
-                                        className="text-[10px] text-slate-400 hover:text-red-500"
+                                        className="text-[13px] text-slate-400 hover:text-red-500 cursor-pointer"
                                     >
                                         Clear
                                     </button>
@@ -152,7 +149,7 @@ export function Navbar() {
                                                     if (activePage !== 'catalog') setActivePage('catalog');
                                                     setIsSearchFocused(false);
                                                 }}
-                                                className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-colors"
+                                                className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-colors cursor-pointer"
                                             >
                                                 <span className="material-symbols-outlined text-[16px] text-slate-400">history</span>
                                                 {item}
