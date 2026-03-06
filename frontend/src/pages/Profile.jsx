@@ -3,9 +3,53 @@ import { useAppContext } from '../context/AppContext';
 import api from '../api';
 
 export function Profile({ initialTab = 'profile-orders' }) {
-    const { notifications, setNotifications, formatTimeAgo, setActivePage, user } = useAppContext();
+    const { notifications, setNotifications, formatTimeAgo, setActivePage, user, updateProfile } = useAppContext();
     const [orders, setOrders] = useState([]);
     const [loadingOrders, setLoadingOrders] = useState(true);
+
+    const [formData, setFormData] = useState({
+        username: user?.username || '',
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
+        email: user?.email || '',
+        phoneNumber: user?.phoneNumber || '',
+        address: user?.address || ''
+    });
+
+    const [updateError, setUpdateError] = useState('');
+    const [updateSuccess, setUpdateSuccess] = useState('');
+
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                username: user.username || '',
+                firstName: user.firstName || '',
+                lastName: user.lastName || '',
+                email: user.email || '',
+                phoneNumber: user.phoneNumber || '',
+                address: user.address || ''
+            });
+        }
+    }, [user]);
+
+    const handleFormChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (updateError) setUpdateError('');
+        if (updateSuccess) setUpdateSuccess('');
+    };
+
+    const handleUpdateProfile = async (e) => {
+        e?.preventDefault();
+        setUpdateError('');
+        setUpdateSuccess('');
+        
+        const res = await updateProfile(formData);
+        if (res.success) {
+            setUpdateSuccess('Profile updated successfully!');
+        } else {
+            setUpdateError(res.error);
+        }
+    };
 
     const fetchOrders = async () => {
         if (!user) return;
@@ -82,7 +126,7 @@ export function Profile({ initialTab = 'profile-orders' }) {
     return (
         <div className="max-w-5xl mx-auto px-6 py-12 animate-fade-in">
             {/* Profile Header */}
-            <div className="flex flex-col md:flex-row items-center gap-8 mb-16 p-8 bg-white dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none transition-all duration-500 hover:shadow-2xl">
+            <div className="flex flex-col md:flex-row items-center gap-8 mb-16 p-8 bg-white dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none transition-all duration-500 hover:shadow-2xl hover:shadow-primary/30 dark:hover:shadow-primary/20 hover:border-primary/20">
                 <div className="relative group">
                     <div className="h-32 w-32 rounded-full bg-primary/20 border-4 border-primary/30 overflow-hidden shadow-2xl transition-transform duration-500 group-hover:scale-105">
                         <img className="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnX1mcWPKB3cgFDOqVOboQPr08Kw0YMm8Jo8LX-JzRADSkOQoilqGWirQm4dE_XH7QLHW65hp3dWY3MbaQz8_yU8z1w2hUABCy32gU7mEDmUtdZsszs2ZDhDJZmvzh4OsHSSAJ_xHT-oBy7s7G9x8lkiuPPGfJPScLUNc3IVKQoyVTTks-f3ffM9duUVZWY_4rswPpHMTJRV8eqTcA2XMhHsVneKJihSlVtBo0Ll35cnYkCDfBbmcBSG5tAkqjQvP1bIF47EcJnUoJ" alt="Profile" />
@@ -93,9 +137,9 @@ export function Profile({ initialTab = 'profile-orders' }) {
                 </div>
                 <div className="text-center md:text-left">
                     <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
-                        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{user.username}</h1>
+                        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{user.firstName ? `${user.firstName} ${user.lastName}` : user.username}</h1>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 font-bold mb-4">{user.email} <span className="mx-2 opacity-30">•</span> New York, USA</p>
+                    <p className="text-slate-500 dark:text-slate-400 font-bold mb-4">{user.email} <span className="mx-2 opacity-30">•</span> {user.address || 'No address provided'}</p>
                     <div className="flex items-center justify-center md:justify-start gap-8">
                         <div>
                             <p className="text-2xl font-black text-slate-900 dark:text-white">{orders.length}</p>
@@ -249,26 +293,48 @@ export function Profile({ initialTab = 'profile-orders' }) {
                         <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Account Settings</h2>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800/50 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+                    <form onSubmit={handleUpdateProfile} className="bg-white dark:bg-slate-800/50 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
                         <div className="p-8 md:p-12 space-y-12">
+                            {updateError && (
+                                <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl text-sm font-bold animate-fade-in flex items-center gap-3">
+                                    <span className="material-symbols-outlined">error</span>
+                                    {updateError}
+                                </div>
+                            )}
+                            {updateSuccess && (
+                                <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-500 rounded-2xl text-sm font-bold animate-fade-in flex items-center gap-3">
+                                    <span className="material-symbols-outlined">check_circle</span>
+                                    {updateSuccess}
+                                </div>
+                            )}
+
                             {/* Form Fields */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 <div className="space-y-3">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
-                                    <input type="text" defaultValue={user.username} className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold outline-none transition-all placeholder:text-slate-300" placeholder="Your Name" />
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Username</label>
+                                    <input type="text" name="username" value={formData.username} onChange={handleFormChange} className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-400/70 dark:placeholder:text-slate-600 placeholder:font-medium" placeholder="e.g. johndoe" />
                                 </div>
                                 <div className="space-y-3">
                                     <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
-                                    <input type="email" defaultValue={user.email} className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold outline-none transition-all placeholder:text-slate-300" placeholder="your@email.com" />
+                                    <input type="email" name="email" value={formData.email} onChange={handleFormChange} className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-400/70 dark:placeholder:text-slate-600 placeholder:font-medium" placeholder="e.g. your@email.com" />
                                 </div>
                                 <div className="space-y-3">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name</label>
+                                    <input type="text" name="firstName" value={formData.firstName} onChange={handleFormChange} className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-400/70 dark:placeholder:text-slate-600 placeholder:font-medium" placeholder="e.g. John" />
+                                </div>
+                                <div className="space-y-3">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name</label>
+                                    <input type="text" name="lastName" value={formData.lastName} onChange={handleFormChange} className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-400/70 dark:placeholder:text-slate-600 placeholder:font-medium" placeholder="e.g. Doe" />
+                                </div>
+                                <div className="space-y-3 md:col-span-2">
                                     <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone Number</label>
-                                    <input type="tel" defaultValue="+1 (555) 000-0000" className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold outline-none transition-all placeholder:text-slate-300" placeholder="+x (xxx) xxx-xxxx" />
+                                    <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleFormChange} className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-400/70 dark:placeholder:text-slate-600 placeholder:font-medium" placeholder="e.g. +1 (555) 000-0000" />
                                 </div>
-                                <div className="space-y-3">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Location</label>
-                                    <input type="text" defaultValue="New York, USA" className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold outline-none transition-all placeholder:text-slate-300" placeholder="City, Country" />
-                                </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Address</label>
+                                <textarea name="address" value={formData.address} onChange={handleFormChange} className="w-full min-h-[100px] py-4 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-400/70 dark:placeholder:text-slate-600 placeholder:font-medium resize-none" placeholder="e.g. 123 Street Code, City, Country" />
                             </div>
 
                             {/* Switches Section */}
@@ -298,10 +364,10 @@ export function Profile({ initialTab = 'profile-orders' }) {
                         </div>
 
                         <div className="p-8 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center mt-4">
-                            <button className="px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-red-600 hover:bg-red-600/20 transition-all active:scale-95 cursor-pointer">Delete Account</button>
-                            <button className="bg-slate-900 dark:bg-white text-white dark:text-black px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 cursor-pointer active:scale-95 transition-all">Save Changes</button>
+                            <button type="button" className="px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-red-600 hover:bg-red-600/20 transition-all active:scale-95 cursor-pointer">Delete Account</button>
+                            <button type="submit" className="bg-slate-900 dark:bg-white text-white dark:text-black px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 cursor-pointer active:scale-95 transition-all">Save Changes</button>
                         </div>
-                    </div>
+                    </form>
                 </section>
             </div>
 

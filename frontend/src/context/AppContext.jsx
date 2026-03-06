@@ -66,6 +66,28 @@ export function AppProvider({ children }) {
         }
     };
 
+    const updateProfile = async (userDataPayload) => {
+        try {
+            const data = await api.put('/auth/profile', userDataPayload);
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            const userData = { 
+                username: data.username, 
+                email: data.email,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                phoneNumber: data.phoneNumber,
+                address: data.address
+            };
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+            return { success: true };
+        } catch (err) {
+            console.error("Profile update failed:", err);
+            return { success: false, error: err.response?.data || 'Profile update failed' };
+        }
+    };
+
     const logout = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
@@ -262,7 +284,7 @@ export function AppProvider({ children }) {
             checkout,
             selectedProduct, setSelectedProduct, viewProductDetails,
             searchHistory, setSearchHistory, addToSearchHistory,
-            user, login, register, logout
+            user, login, register, updateProfile, logout
         }}>
             {children}
         </AppContext.Provider>
