@@ -1,18 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 
 export function Navbar() {
-    const { searchQuery, setSearchQuery, cart, removeFromCart, updateCartQuantity } = useAppContext();
+    const { activePage, setActivePage, searchQuery, setSearchQuery, cart, removeFromCart, updateCartQuantity } = useAppContext();
 
     // UI states 
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+    // Refs for click-outside detection
+    const cartRef = useRef(null);
+    const notifRef = useRef(null);
+    const profileRef = useRef(null);
+
     // Render states for exit animation
     const [shouldRenderCart, setShouldRenderCart] = useState(false);
     const [shouldRenderNotif, setShouldRenderNotif] = useState(false);
     const [shouldRenderProfile, setShouldRenderProfile] = useState(false);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isCartOpen && cartRef.current && !cartRef.current.contains(event.target)) {
+                setIsCartOpen(false);
+            }
+            if (isNotifOpen && notifRef.current && !notifRef.current.contains(event.target)) {
+                setIsNotifOpen(false);
+            }
+            if (isProfileOpen && profileRef.current && !profileRef.current.contains(event.target)) {
+                setIsProfileOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isCartOpen, isNotifOpen, isProfileOpen]);
 
     useEffect(() => {
         if (isCartOpen) {
@@ -54,11 +76,14 @@ export function Navbar() {
     return (
         <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
             <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-8">
-                <div className="flex items-center gap-2 shrink-0">
-                    <div className="bg-primary p-1.5 rounded-lg flex items-center justify-center">
+                <div
+                    onClick={() => setActivePage('home')}
+                    className="flex items-center gap-2 shrink-0 cursor-pointer group active:scale-98 transition-all duration-300 hover:-translate-y-0.5"
+                >
+                    <div className="bg-primary p-1.5 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/30">
                         <span className="material-symbols-outlined text-white text-[20px] block">diamond</span>
                     </div>
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-[#F2F8FC]">Budal</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-[#F2F8FC] select-none">Budal</h1>
                 </div>
 
                 <div className="flex-1 max-w-2xl relative">
@@ -67,7 +92,7 @@ export function Navbar() {
                         <input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-slate-100 dark:bg-slate-800/50 border-none focus:outline-none focus:ring-2 focus:ring-primary rounded-xl pl-10 pr-4 py-2 text-sm transition-all placeholder:text-slate-500 text-slate-900 dark:text-[#F2F8FC]"
+                            className="w-full bg-slate-100 dark:bg-slate-800/50 border-none focus:outline-none focus:ring-2 focus:ring-primary/80 rounded-xl pl-10 pr-4 py-2 text-sm transition-all duration-200 ease-out placeholder:text-slate-500 text-slate-900 dark:text-[#F2F8FC] focus:bg-white dark:focus:bg-slate-800"
                             placeholder="Search products"
                             type="text"
                         />
@@ -76,14 +101,14 @@ export function Navbar() {
 
                 <div className="flex items-center gap-4 shrink-0 relative">
                     {/* Cart Dropdown */}
-                    <div className="relative">
+                    <div className="relative" ref={cartRef}>
                         <button
                             onClick={() => setIsCartOpen(!isCartOpen)}
-                            className="relative h-10 w-10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 cursor-pointer"
+                            className={`relative h-10 w-10 flex items-center justify-center rounded-lg transition-all active:scale-98 cursor-pointer ${isCartOpen ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                         >
                             <span className="material-symbols-outlined">shopping_cart</span>
                             {cartItemsCount > 0 && (
-                                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white leading-none">
+                                <span className={`absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold leading-none ${isCartOpen ? 'bg-white text-primary' : 'bg-primary text-white'}`}>
                                     {cartItemsCount}
                                 </span>
                             )}
@@ -148,10 +173,10 @@ export function Navbar() {
                     </div>
 
                     {/* Notifications Dropdown */}
-                    <div className="relative">
+                    <div className="relative" ref={notifRef}>
                         <button
                             onClick={() => setIsNotifOpen(!isNotifOpen)}
-                            className="h-10 w-10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-95 cursor-pointer"
+                            className={`h-10 w-10 flex items-center justify-center rounded-lg transition-all active:scale-98 cursor-pointer ${isNotifOpen ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                         >
                             <span className="material-symbols-outlined">notifications</span>
                         </button>
@@ -165,14 +190,13 @@ export function Navbar() {
                     <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
 
                     {/* Profile Dropdown */}
-                    <div className="relative">
-                        <div className="flex items-center gap-3 pl-2 cursor-pointer transition-all active:scale-95" onClick={() => setIsProfileOpen(!isProfileOpen)}>
+                    <div className="relative" ref={profileRef}>
+                        <div className="flex items-center gap-3 pl-2 cursor-pointer transition-all" onClick={() => setIsProfileOpen(!isProfileOpen)}>
                             <div className="text-right hidden sm:block">
-                                <p className="text-xs font-medium text-slate-900 dark:text-[#F2F8FC] leading-none">Alex Rivera</p>
-                                <p className="text-[10px] text-slate-500 font-medium">Gold Member</p>
+                                <p className="text-xs font-medium text-slate-900 dark:text-[#F2F8FC] leading-none select-none">Alex Rivera</p>
                             </div>
-                            <div className="h-9 w-9 rounded-full bg-primary/20 border-2 border-primary/30 overflow-hidden cursor-pointer">
-                                <img className="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnX1mcWPKB3cgFDOqVOboQPr08Kw0YMm8Jo8LX-JzRADSkOQoilqGWirQm4dE_XH7QLHW65hp3dWY3MbaQz8_yU8z1w2hUABCy32gU7mEDmUtdZsszs2ZDhDJZmvzh4OsHSSAJ_xHT-oBy7s7G9x8lkiuPPGfJPScLUNc3IVKQoyVTTks-f3ffM9duUVZWY_4rswPpHMTJRV8eqTcA2XMhHsVneKJihSlVtBo0Ll35cnYkCDfBbmcBSG5tAkqjQvP1bIF47EcJnUoJ" alt="Profile avatar" />
+                            <div className="h-9 w-9 rounded-full bg-primary/20 border-2 border-primary/30 overflow-hidden cursor-pointer select-none">
+                                <img className="h-full w-full object-cover select-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnX1mcWPKB3cgFDOqVOboQPr08Kw0YMm8Jo8LX-JzRADSkOQoilqGWirQm4dE_XH7QLHW65hp3dWY3MbaQz8_yU8z1w2hUABCy32gU7mEDmUtdZsszs2ZDhDJZmvzh4OsHSSAJ_xHT-oBy7s7G9x8lkiuPPGfJPScLUNc3IVKQoyVTTks-f3ffM9duUVZWY_4rswPpHMTJRV8eqTcA2XMhHsVneKJihSlVtBo0Ll35cnYkCDfBbmcBSG5tAkqjQvP1bIF47EcJnUoJ" alt="Profile avatar" draggable="false" />
                             </div>
                         </div>
 

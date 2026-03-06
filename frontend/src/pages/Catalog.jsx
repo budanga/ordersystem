@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ProductCard } from '../components/ProductCard';
 import { useAppContext } from '../context/AppContext';
 import api from '../api';
@@ -22,6 +22,17 @@ export function Catalog() {
     // Sort Dropdown UI State
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [shouldRenderSort, setShouldRenderSort] = useState(false);
+    const sortRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isSortOpen && sortRef.current && !sortRef.current.contains(event.target)) {
+                setIsSortOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isSortOpen]);
 
     useEffect(() => {
         if (isSortOpen) {
@@ -101,10 +112,10 @@ export function Catalog() {
                     </div>
 
                     {/* Custom Sort Dropdown */}
-                    <div className="relative min-w-[200px]">
+                    <div className="relative min-w-[200px]" ref={sortRef}>
                         <button
                             onClick={() => setIsSortOpen(!isSortOpen)}
-                            className="w-full flex items-center justify-between bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-medium py-2 px-4 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer active:scale-95"
+                            className="w-full flex items-center justify-between bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-medium py-2 px-4 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer active:scale-98"
                         >
                             <span>{sortOptions[sortBy]}</span>
                             <span className={`material-symbols-outlined transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`}>expand_more</span>

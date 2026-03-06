@@ -5,6 +5,7 @@ const AppContext = createContext();
 
 export function AppProvider({ children }) {
     // UI State
+    const [activePage, setActivePage] = useState('home'); // 'home' or 'catalog'
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
     // Filter State
@@ -65,6 +66,7 @@ export function AppProvider({ children }) {
 
     return (
         <AppContext.Provider value={{
+            activePage, setActivePage,
             viewMode, setViewMode,
             searchQuery, setSearchQuery,
             selectedCategory, setSelectedCategory,
