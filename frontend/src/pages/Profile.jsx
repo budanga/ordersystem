@@ -1,9 +1,33 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import api from '../api';
 
 export function Profile({ initialTab = 'profile-orders' }) {
-    const { notifications, setNotifications, formatTimeAgo, setActivePage } = useAppContext();
+    const { notifications, setNotifications, formatTimeAgo, setActivePage, user } = useAppContext();
+    const [orders, setOrders] = useState([]);
+    const [loadingOrders, setLoadingOrders] = useState(true);
+
+    const fetchOrders = async () => {
+        if (!user) return;
+        setLoadingOrders(true);
+        try {
+            const data = await api.get(`/orders/customer?customerName=${user.username}`);
+            // The backend returns a list of OrderDTO
+            setOrders(data);
+        } catch (err) {
+            console.error("Error fetching orders:", err);
+        } finally {
+            setLoadingOrders(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!user) {
+            setActivePage('login');
+        } else {
+            fetchOrders();
+        }
+    }, [user, setActivePage]);
 
     const ordersRef = useRef(null);
     const notificationsRef = useRef(null);
@@ -53,11 +77,7 @@ export function Profile({ initialTab = 'profile-orders' }) {
         }
     };
 
-    const mockOrders = [
-        { id: 'ORD-9928', date: '2026-03-05', total: 549.99, status: 'Processing', items: 3 },
-        { id: 'ORD-9841', date: '2026-02-28', total: 129.50, status: 'Shipped', items: 1 },
-        { id: 'ORD-9712', date: '2026-02-15', total: 899.00, status: 'Delivered', items: 2 },
-    ];
+    if (!user) return null;
 
     return (
         <div className="max-w-5xl mx-auto px-6 py-12 animate-fade-in">
@@ -73,17 +93,19 @@ export function Profile({ initialTab = 'profile-orders' }) {
                 </div>
                 <div className="text-center md:text-left">
                     <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
-                        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Alex Rivera</h1>
+                        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{user.username}</h1>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 font-bold mb-4">alex.rivera@example.com <span className="mx-2 opacity-30">•</span> New York, USA</p>
+                    <p className="text-slate-500 dark:text-slate-400 font-bold mb-4">{user.email} <span className="mx-2 opacity-30">•</span> New York, USA</p>
                     <div className="flex items-center justify-center md:justify-start gap-8">
                         <div>
-                            <p className="text-2xl font-black text-slate-900 dark:text-white">12</p>
+                            <p className="text-2xl font-black text-slate-900 dark:text-white">{orders.length}</p>
                             <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">Orders</p>
                         </div>
                         <div className="w-px h-8 bg-slate-200 dark:bg-slate-800"></div>
                         <div>
-                            <p className="text-2xl font-black text-slate-900 dark:text-white">2.4k</p>
+                            <p className="text-2xl font-black text-slate-900 dark:text-white">
+                                ${orders.reduce((acc, o) => acc + o.totalAmount, 0).toFixed(0)}
+                            </p>
                             <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">Spent</p>
                         </div>
                     </div>
@@ -101,12 +123,12 @@ export function Profile({ initialTab = 'profile-orders' }) {
                         <span className="material-symbols-outlined text-[20px]">notifications</span>
                         Notifications
                         {notifications.filter(n => !n.read).length > 0 && (
-                            <span className="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                            <span className="absolute top-2 right-2 h-2 w-2 bg-primary rounded-full ring-4 ring-slate-100 dark:ring-slate-900"></span>
                         )}
                     </button>
                     <button onClick={() => { scrollToSection(settingsRef); setActivePage('profile-settings'); }} className="px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all hover:bg-white dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white flex items-center gap-2 cursor-pointer">
-                        <span className="material-symbols-outlined text-[20px]">manage_accounts</span>
-                        Account
+                        <span className="material-symbols-outlined text-[20px]">settings</span>
+                        Settings
                     </button>
                 </div>
             </div>
@@ -125,44 +147,54 @@ export function Profile({ initialTab = 'profile-orders' }) {
                     </div>
 
                     <div className="grid gap-6">
-                        {mockOrders.map(order => (
-                            <div key={order.id} className="bg-white dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 transition-all hover:border-primary/50 group">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-14 w-14 bg-slate-100 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
-                                            <span className="material-symbols-outlined text-[28px]">package_2</span>
+                        {loadingOrders ? (
+                            <div className="flex items-center justify-center py-20">
+                                <div className="size-10 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
+                            </div>
+                        ) : orders.length === 0 ? (
+                            <div className="bg-white dark:bg-slate-800/30 p-12 rounded-3xl border border-slate-100 dark:border-slate-800 text-center">
+                                <span className="material-symbols-outlined text-5xl text-slate-200 dark:text-slate-700 mb-4">shopping_bag</span>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">No orders yet</h3>
+                                <p className="text-slate-500 dark:text-slate-400 mb-8">Start your first purchase today!</p>
+                                <button onClick={() => setActivePage('catalog')} className="px-8 py-3 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer">Explore Catalog</button>
+                            </div>
+                        ) : (
+                            orders.map(order => (
+                                <div key={order.id} className="bg-white dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 transition-all hover:border-primary/50 group">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-14 w-14 bg-slate-100 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+                                                <span className="material-symbols-outlined text-[28px]">package_2</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-lg font-black text-slate-900 dark:text-white">#{order.id}</p>
+                                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-lg font-black text-slate-900 dark:text-white">{order.id}</p>
-                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{new Date(order.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                                        </div>
-                                    </div>
 
-                                    <div className="flex flex-wrap items-center gap-8">
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${order.status === 'Delivered' ? 'bg-emerald-500/10 text-emerald-500' :
-                                                order.status === 'Processing' ? 'bg-amber-500/10 text-amber-500' :
-                                                    'bg-blue-500/10 text-blue-500'
-                                                }`}>
-                                                {order.status}
-                                            </span>
+                                        <div className="flex flex-wrap items-center gap-8">
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${order.completed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                                    {order.completed ? 'Delivered' : 'Processing'}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Items</p>
+                                                <p className="text-sm font-black dark:text-slate-200">{order.orderItems?.length || 0} Products</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Total</p>
+                                                <p className="text-xl font-black text-primary">${Number(order.totalAmount).toFixed(2)}</p>
+                                            </div>
+                                            <button className="h-12 w-12 rounded-2xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white transition-all duration-300 cursor-pointer shadow-sm">
+                                                <span className="material-symbols-outlined">chevron_right</span>
+                                            </button>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Items</p>
-                                            <p className="font-black text-slate-900 dark:text-white">{order.items} Products</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Total</p>
-                                            <p className="font-black text-primary text-lg">${order.total.toFixed(2)}</p>
-                                        </div>
-                                        <button className="h-10 w-10 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                                            <span className="material-symbols-outlined text-slate-400">chevron_right</span>
-                                        </button>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </section>
 
@@ -170,19 +202,19 @@ export function Profile({ initialTab = 'profile-orders' }) {
                 <section ref={notificationsRef} className="scroll-mt-32">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <span className="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-1 block">Stay Updated</span>
-                            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Notifications</h2>
+                            <span className="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-1 block">Activity</span>
+                            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Recent Notifications</h2>
                         </div>
+                        <button className="text-slate-400 hover:text-primary transition-colors cursor-pointer flex items-center gap-1 text-sm font-bold uppercase tracking-widest">
+                            Mark All Read
+                        </button>
                     </div>
 
-                    {notifications.length === 0 ? (
-                        <div className="bg-slate-50 dark:bg-slate-900/30 rounded-3xl p-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-800">
-                            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700 mb-4 block">notifications_off</span>
-                            <p className="text-slate-500 font-bold">You're all caught up!</p>
-                        </div>
-                    ) : (
-                        <div className="grid gap-3">
-                            {notifications.map(notif => {
+                    <div className="space-y-4">
+                        {notifications.length === 0 ? (
+                            <p className="text-center py-10 text-slate-500">You're all caught up!</p>
+                        ) : (
+                            notifications.map(notif => {
                                 const config = notificationConfigs[notif.type] || { icon: 'info', color: 'text-slate-500', bg: 'bg-slate-500/10', label: 'System' };
                                 return (
                                     <div
@@ -190,85 +222,77 @@ export function Profile({ initialTab = 'profile-orders' }) {
                                         onClick={() => markAsRead(notif.id)}
                                         className={`p-5 rounded-2xl border transition-all flex items-center gap-5 cursor-pointer ${notif.read ? 'bg-white dark:bg-slate-800/30 border-slate-100 dark:border-slate-800 opacity-60' : 'bg-primary/5 dark:bg-primary/10 border-primary/20 shadow-lg shadow-primary/5'}`}
                                     >
-                                        <div className={`h-14 w-14 shrink-0 flex items-center justify-center rounded-2xl ${config.bg} ${config.color}`}>
-                                            <span className="material-symbols-outlined text-[28px]">{config.icon}</span>
+                                        <div className={`h-12 w-12 shrink-0 rounded-2xl flex items-center justify-center ${config.bg} ${config.color}`}>
+                                            <span className="material-symbols-outlined">{config.icon}</span>
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex justify-between items-start mb-1">
-                                                <span className={`text-[10px] uppercase font-black tracking-widest ${config.color}`}>
-                                                    {config.label}
-                                                </span>
-                                                <span className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                                                    {formatTimeAgo(notif.createdAt)}
-                                                </span>
+                                                <p className={`text-[10px] uppercase font-black tracking-widest ${config.color}`}>{config.label}</p>
+                                                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider font-mono">{formatTimeAgo(notif.createdAt)}</p>
                                             </div>
-                                            <p className={`text-sm md:text-base ${!notif.read ? 'text-slate-900 dark:text-white font-black' : 'text-slate-600 dark:text-slate-400 font-bold'}`}>
-                                                {notif.text}
-                                            </p>
+                                            <p className={`text-sm ${notif.read ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-white font-bold'}`}>{notif.text}</p>
                                         </div>
-                                        {!notif.read && (
-                                            <div className="h-3 w-3 rounded-full bg-primary shrink-0 shadow-lg shadow-primary/50"></div>
-                                        )}
+                                        <div className="h-8 w-8 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-300 group-hover:text-primary transition-colors">
+                                            <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                                        </div>
                                     </div>
                                 );
-                            })}
-                        </div>
-                    )}
+                            })
+                        )}
+                    </div>
                 </section>
 
                 {/* Account Settings Section */}
                 <section ref={settingsRef} className="scroll-mt-32">
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <span className="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-1 block">Account Preferences</span>
-                            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Settings</h2>
-                        </div>
+                    <div className="mb-8">
+                        <span className="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-1 block">Preferences</span>
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Account Settings</h2>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-                        <div className="p-8 border-b border-slate-100 dark:border-slate-800">
-                            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6">Personal Information</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-4">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Full Name</label>
-                                    <input type="text" readOnly value="Alex Rivera" className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl p-4 text-sm font-bold text-slate-900 dark:text-white" />
+                    <div className="bg-white dark:bg-slate-800/50 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+                        <div className="p-8 md:p-12 space-y-12">
+                            {/* Form Fields */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="space-y-3">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
+                                    <input type="text" defaultValue={user.username} className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold outline-none transition-all placeholder:text-slate-300" placeholder="Your Name" />
                                 </div>
-                                <div className="space-y-4">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Email Address</label>
-                                    <input type="email" readOnly value="alex.rivera@example.com" className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl p-4 text-sm font-bold text-slate-900 dark:text-white" />
+                                <div className="space-y-3">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+                                    <input type="email" defaultValue={user.email} className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold outline-none transition-all placeholder:text-slate-300" placeholder="your@email.com" />
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="p-8 space-y-8">
-                            <h3 className="text-lg font-black text-slate-900 dark:text-white">Security & Preferences</h3>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 bg-indigo-500/10 text-indigo-500 rounded-xl flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-[20px]">security</span>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Two-Factor Authentication</p>
-                                        <p className="text-xs font-bold text-slate-500">Add an extra layer of security to your account.</p>
-                                    </div>
+                                <div className="space-y-3">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone Number</label>
+                                    <input type="tel" defaultValue="+1 (555) 000-0000" className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold outline-none transition-all placeholder:text-slate-300" placeholder="+x (xxx) xxx-xxxx" />
                                 </div>
-                                <div className="h-6 w-11 bg-slate-200 dark:bg-slate-700 rounded-full relative cursor-pointer">
-                                    <div className="absolute left-1 top-1 h-4 w-4 bg-white rounded-full"></div>
+                                <div className="space-y-3">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Location</label>
+                                    <input type="text" defaultValue="New York, USA" className="w-full h-14 bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-primary/30 rounded-2xl px-6 text-sm font-bold outline-none transition-all placeholder:text-slate-300" placeholder="City, Country" />
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-[20px]">notifications_active</span>
+                            {/* Switches Section */}
+                            <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Communication Preferences</h3>
+                                <div className="grid gap-4">
+                                    <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/30 rounded-2xl">
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900 dark:text-white">Email Notifications</p>
+                                            <p className="text-xs text-slate-500">Receive updates on your order status and shipping.</p>
+                                        </div>
+                                        <div className="h-6 w-11 bg-primary rounded-full relative cursor-pointer">
+                                            <div className="absolute right-1 top-1 h-4 w-4 bg-white rounded-full"></div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Order Updates Email</p>
-                                        <p className="text-xs font-bold text-slate-500">Receive real-time tracking for your orders.</p>
+                                    <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/30 rounded-2xl">
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900 dark:text-white">Marketing Offers</p>
+                                            <p className="text-xs text-slate-500">Personalized discounts and new arrival alerts.</p>
+                                        </div>
+                                        <div className="h-6 w-11 bg-slate-200 dark:bg-slate-800 rounded-full relative cursor-pointer">
+                                            <div className="absolute left-1 top-1 h-4 w-4 bg-white rounded-full"></div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="h-6 w-11 bg-primary rounded-full relative cursor-pointer">
-                                    <div className="absolute right-1 top-1 h-4 w-4 bg-white rounded-full"></div>
                                 </div>
                             </div>
                         </div>
@@ -281,7 +305,7 @@ export function Profile({ initialTab = 'profile-orders' }) {
                 </section>
             </div>
 
-            {/* Scroll to Top Button (Hidden by default, can be added later if needed) */}
+            {/* Bottom space */}
             <div className="h-24"></div>
         </div>
     );
