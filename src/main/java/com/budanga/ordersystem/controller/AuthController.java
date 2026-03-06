@@ -1,6 +1,7 @@
 package com.budanga.ordersystem.controller;
 
 import com.budanga.ordersystem.dto.AuthRequestDTO;
+import com.budanga.ordersystem.dto.RegisterRequestDTO;
 import com.budanga.ordersystem.dto.RefreshTokenRequestDTO;
 import com.budanga.ordersystem.dto.TokenResponseDTO;
 import com.budanga.ordersystem.entity.RefreshToken;
@@ -45,9 +46,16 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<TokenResponseDTO> register(@Valid @RequestBody AuthRequestDTO request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDTO request) {
+        boolean usernameExists = userRepository.existsByUsername(request.getUsername());
+        boolean emailExists = userRepository.existsByEmail(request.getEmail());
+
+        if (usernameExists && emailExists) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username and Email are already taken");
+        } else if (usernameExists) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username is already taken");
+        } else if (emailExists) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already taken");
         }
 
         Set<String> roles = new HashSet<>();
@@ -55,7 +63,12 @@ public class AuthController {
 
         User user = User.builder()
                 .username(request.getUsername())
+                .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .phoneNumber(request.getPhoneNumber())
+                .address(request.getAddress())
                 .roles(roles)
                 .build();
 
@@ -67,6 +80,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(TokenResponseDTO.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phoneNumber(user.getPhoneNumber())
+                .address(user.getAddress())
                 .build());
     }
 
@@ -92,6 +111,12 @@ public class AuthController {
         return ResponseEntity.ok(TokenResponseDTO.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phoneNumber(user.getPhoneNumber())
+                .address(user.getAddress())
                 .build());
     }
 
