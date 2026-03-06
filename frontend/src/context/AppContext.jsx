@@ -84,7 +84,17 @@ export function AppProvider({ children }) {
             return { success: true };
         } catch (err) {
             console.error("Profile update failed:", err);
-            return { success: false, error: err.response?.data || 'Profile update failed' };
+            let errorMessage = 'Profile update failed';
+            if (err.response?.data) {
+                if (typeof err.response.data === 'string') {
+                    errorMessage = err.response.data;
+                } else if (err.response.data.message || err.response.data.error) {
+                    errorMessage = err.response.data.message || err.response.data.error;
+                } else {
+                    errorMessage = JSON.stringify(err.response.data);
+                }
+            }
+            return { success: false, error: errorMessage };
         }
     };
 
