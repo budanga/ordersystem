@@ -88,6 +88,11 @@ export function Catalog() {
         return () => clearTimeout(timeoutId);
     }, [searchQuery, selectedCategory, priceRange, inStockOnly, sortBy, currentPage, setTotalPages]);
 
+    useEffect(() => {
+        // Reset to page 0 whenever any of these filters change, as they modify the total number of items
+        setCurrentPage(0);
+    }, [searchQuery, selectedCategory, priceRange, inStockOnly, sortBy, setCurrentPage]);
+
     return (
         <div className="w-full">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
@@ -157,11 +162,47 @@ export function Catalog() {
             ) : (
                 <div
                     key={viewMode}
-                    className={`${viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8" : "flex flex-col gap-6"} animate-dropdown origin-top`}
+                    className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8" : "flex flex-col gap-6"}
                 >
-                    {products.map(product => (
-                        <ProductCard key={product.id} product={product} viewMode={viewMode} />
-                    ))}
+                    {(() => {
+                        const delays = {};
+                        if (viewMode === 'grid') {
+                            let cols = 1;
+                            if (typeof window !== 'undefined') {
+                                if (window.innerWidth >= 1280) cols = 3;
+                                else if (window.innerWidth >= 640) cols = 2;
+                            }
+                            if (cols > 1) {
+                                const getSortValue = (c, r) => {
+                                    const L = Math.max(c, r);
+                                    const d = (c === L) ? r : c;
+                                    const isTopRightBranch = (c === L);
+                                    return L * 1000 + d * 2 + (isTopRightBranch ? 0 : 1);
+                                };
+                                const ranks = products.map((_, i) => ({
+                                    index: i,
+                                    val: getSortValue(i % cols, Math.floor(i / cols))
+                                }));
+                                ranks.sort((a, b) => a.val - b.val);
+                                ranks.forEach((r, rank) => {
+                                    delays[r.index] = rank;
+                                });
+                            }
+                        }
+
+                        return products.map((product, index) => {
+                            const delayIndex = delays[index] !== undefined ? delays[index] : index;
+                            return (
+                                <div
+                                    key={product.id}
+                                    className="animate-dropdown origin-top"
+                                    style={{ animationDelay: `${delayIndex * 80}ms`, animationFillMode: 'both' }}
+                                >
+                                    <ProductCard product={product} viewMode={viewMode} />
+                                </div>
+                            );
+                        });
+                    })()}
                 </div>
             )}
 

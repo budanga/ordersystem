@@ -4,6 +4,37 @@ import { useAppContext } from '../context/AppContext';
 export function Navbar() {
     const { activePage, setActivePage, searchQuery, setSearchQuery, cart, removeFromCart, updateCartQuantity } = useAppContext();
 
+    // Search History State
+    const [searchHistory, setSearchHistory] = useState(() => {
+        const saved = localStorage.getItem('searchHistory');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+    // Save history to localStorage
+    useEffect(() => {
+        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+    }, [searchHistory]);
+
+    // Clear search query when changing main pages (tabs/views)
+    useEffect(() => {
+        setSearchQuery('');
+    }, [activePage, setSearchQuery]);
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim() && !searchHistory.includes(searchQuery.trim())) {
+            setSearchHistory(prev => [searchQuery.trim(), ...prev].slice(0, 5)); // Keep last 5
+        }
+        if (searchQuery.trim()) {
+            setIsSearchFocused(false);
+            e.target.blur();
+            if (activePage !== 'catalog') {
+                setActivePage('catalog');
+            }
+        }
+    };
+
     // UI states 
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -87,16 +118,51 @@ export function Navbar() {
                 </div>
 
                 <div className="flex-1 max-w-2xl relative">
-                    <div className="relative group">
+                    <form onSubmit={handleSearchSubmit} className="relative group">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
                         <input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setIsSearchFocused(true)}
+                            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                             className="w-full bg-slate-100 dark:bg-slate-800/50 border-none focus:outline-none focus:ring-2 focus:ring-primary/80 rounded-xl pl-10 pr-4 py-2 text-sm transition-all duration-200 ease-out placeholder:text-slate-500 text-slate-900 dark:text-[#F2F8FC] focus:bg-white dark:focus:bg-slate-800"
                             placeholder="Search products"
                             type="text"
                         />
-                    </div>
+                        {isSearchFocused && searchHistory.length > 0 && !searchQuery && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 animate-dropdown">
+                                <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Recent Searches</span>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => { e.preventDefault(); setSearchHistory([]); }}
+                                        className="text-[10px] text-slate-400 hover:text-red-500"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                                <ul>
+                                    {searchHistory.map((item, index) => (
+                                        <li key={index}>
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    setSearchQuery(item);
+                                                    if (activePage !== 'catalog') setActivePage('catalog');
+                                                    setIsSearchFocused(false);
+                                                }}
+                                                className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-colors"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px] text-slate-400">history</span>
+                                                {item}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </form>
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0 relative">
