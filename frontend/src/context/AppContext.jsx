@@ -5,15 +5,99 @@ const AppContext = createContext();
 
 export function AppProvider({ children }) {
     // UI State
-    const [activePage, setActivePage] = useState('home'); // 'home' or 'catalog'
+    const [activePage, setActivePage] = useState('home'); // 'home', 'catalog', 'product-details', 'login', 'register', etc.
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [selectedProduct, setSelectedProduct] = useState(null);
+
+    // Auth State
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem('user');
+        return saved ? JSON.parse(saved) : null;
+    });
+
+    const login = async (username, password) => {
+        try {
+            const data = await api.post('/auth/login', { username, password });
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            const userData = { 
+                username: data.username, 
+                email: data.email,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                phoneNumber: data.phoneNumber,
+                address: data.address
+            };
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+            setActivePage('home');
+            fetchNotifications();
+            return { success: true };
+        } catch (err) {
+            console.error("Login failed:", err);
+            return { success: false, error: err.response?.status === 401 ? 'Invalid credentials' : 'Login failed' };
+        }
+    };
+
+    const register = async (userDataPayload) => {
+        try {
+            const data = await api.post('/auth/register', userDataPayload);
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            const userData = { 
+                username: data.username, 
+                email: data.email,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                phoneNumber: data.phoneNumber,
+                address: data.address
+            };
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+            setActivePage('home');
+            fetchNotifications();
+            return { success: true };
+        } catch (err) {
+            console.error("Registration failed:", err);
+            if (err.response?.status === 409) {
+                return { success: false, error: err.response.data || 'Username or Email already exists' };
+            }
+            return { success: false, error: 'Registration failed' };
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        setUser(null);
+        setNotifications([]);
+        setActivePage('home');
+    };
 
     // Filter State
+    const [searchHistory, setSearchHistory] = useState(() => {
+        const saved = localStorage.getItem('searchHistory');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    useEffect(() => {
+        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+    }, [searchHistory]);
+
+    const addToSearchHistory = (query) => {
+        const trimmed = query.trim();
+        if (!trimmed) return;
+        setSearchHistory(prev => {
+            const filtered = prev.filter(h => h !== trimmed);
+            return [trimmed, ...filtered].slice(0, 5);
+        });
+    };
+
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [priceRange, setPriceRange] = useState([0, 5000]);
     const [inStockOnly, setInStockOnly] = useState(false);
-
     const [sortBy, setSortBy] = useState('name,asc');
 
     // Pagination
@@ -27,11 +111,16 @@ export function AppProvider({ children }) {
     const [notifications, setNotifications] = useState([]);
 
     const fetchNotifications = async () => {
+        if (!localStorage.getItem('accessToken')) return;
         try {
             const data = await api.get('/notifications');
             setNotifications(data);
         } catch (err) {
             console.error("Error fetching notifications:", err);
+            if (err.response?.status === 401) {
+                // Token might be expired, logout for now
+                // logout();
+            }
         }
     };
 
@@ -97,9 +186,13 @@ export function AppProvider({ children }) {
 
     const checkout = async () => {
         if (cart.length === 0) return;
+        if (!user) {
+            setActivePage('login');
+            return false;
+        }
 
         const orderData = {
-            customerName: "Alex Rivera", // Hardcoded for now
+            customerName: user.username,
             totalAmount: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0),
             orderItems: cart.map(item => ({
                 productName: item.name,
@@ -142,6 +235,15 @@ export function AppProvider({ children }) {
         return past.toLocaleDateString();
     };
 
+    const viewProductDetails = (product) => {
+        if (searchQuery.trim()) {
+            addToSearchHistory(searchQuery);
+        }
+        setSelectedProduct(product);
+        setActivePage('product-details');
+        window.scrollTo(0, 0);
+    };
+
     return (
         <AppContext.Provider value={{
             activePage, setActivePage,
@@ -157,7 +259,10 @@ export function AppProvider({ children }) {
             resetFilters,
             categories,
             notifications, setNotifications, clearDropdownNotifications, markAllNotificationsAsRead, formatTimeAgo,
-            checkout
+            checkout,
+            selectedProduct, setSelectedProduct, viewProductDetails,
+            searchHistory, setSearchHistory, addToSearchHistory,
+            user, login, register, logout
         }}>
             {children}
         </AppContext.Provider>

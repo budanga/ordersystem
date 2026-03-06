@@ -2,26 +2,22 @@ import { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 
 export function Navbar() {
-    const { activePage, setActivePage, searchQuery, setSearchQuery, cart, removeFromCart, updateCartQuantity, notifications, clearDropdownNotifications, markAllNotificationsAsRead, formatTimeAgo, checkout } = useAppContext();
+    const { 
+        activePage, setActivePage, 
+        searchQuery, setSearchQuery, 
+        cart, removeFromCart, updateCartQuantity, 
+        notifications, clearDropdownNotifications, markAllNotificationsAsRead, formatTimeAgo, 
+        checkout,
+        searchHistory, setSearchHistory, addToSearchHistory,
+        user, logout
+    } = useAppContext();
 
-    // Search History State
-    const [searchHistory, setSearchHistory] = useState(() => {
-        const saved = localStorage.getItem('searchHistory');
-        return saved ? JSON.parse(saved) : [];
-    });
     const [isSearchFocused, setIsSearchFocused] = useState(false);
-
-    // Save history to localStorage
-    useEffect(() => {
-        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-    }, [searchHistory]);
-
-    // Clear search query is handled by specific interaction clicks instead of broadly listening to activePage
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
-        if (searchQuery.trim() && !searchHistory.includes(searchQuery.trim())) {
-            setSearchHistory(prev => [searchQuery.trim(), ...prev].slice(0, 5)); // Keep last 5
+        if (searchQuery.trim()) {
+            addToSearchHistory(searchQuery);
         }
         if (searchQuery.trim()) {
             setIsSearchFocused(false);
@@ -83,7 +79,6 @@ export function Navbar() {
             setIsProfileOpen(false);
             isFirstRender.current = false;
         } else {
-            // Only mark as read if it was previously open (not on mount)
             if (!isFirstRender.current) {
                 markAllNotificationsAsRead();
             }
@@ -103,7 +98,6 @@ export function Navbar() {
         }
     }, [isProfileOpen]);
 
-    // Calculate total numbers of items in the cart
     const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
     const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
@@ -125,7 +119,13 @@ export function Navbar() {
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
                         <input
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setSearchQuery(val);
+                                if (activePage !== 'catalog' && val.trim() !== '') {
+                                    setActivePage('catalog');
+                                }
+                            }}
                             onFocus={() => setIsSearchFocused(true)}
                             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                             className="w-full bg-slate-100 dark:bg-slate-800/50 border-none focus:outline-none focus:ring-2 focus:ring-primary/80 rounded-xl pl-10 pr-4 py-2 text-sm transition-all duration-200 ease-out placeholder:text-slate-500 text-slate-900 dark:text-[#F2F8FC] focus:bg-white dark:focus:bg-slate-800"
@@ -169,7 +169,6 @@ export function Navbar() {
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0 relative">
-                    {/* Cart Dropdown */}
                     <div className="relative" ref={cartRef}>
                         <button
                             onClick={() => setIsCartOpen(!isCartOpen)}
@@ -247,7 +246,6 @@ export function Navbar() {
                         )}
                     </div>
 
-                    {/* Notifications Dropdown */}
                     <div className="relative" ref={notifRef}>
                         <button
                             onClick={() => setIsNotifOpen(!isNotifOpen)}
@@ -314,7 +312,8 @@ export function Navbar() {
                                 <div className="p-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
                                     <button
                                         onClick={() => {
-                                            setActivePage('profile-notifications');
+                                            if (!user) setActivePage('login');
+                                            else setActivePage('profile-notifications');
                                             setIsNotifOpen(false);
                                         }}
                                         className="w-full py-2 flex items-center justify-center gap-2 text-primary font-bold text-sm hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
@@ -329,33 +328,44 @@ export function Navbar() {
 
                     <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
 
-                    {/* Profile Dropdown */}
                     <div className="relative" ref={profileRef}>
-                        <div className="flex items-center gap-3 pl-2 cursor-pointer transition-all" onClick={() => setIsProfileOpen(!isProfileOpen)}>
-                            <div className="text-right hidden sm:block">
-                                <p className="text-xs font-medium text-slate-900 dark:text-[#F2F8FC] leading-none select-none">Alex Rivera</p>
+                        {user ? (
+                            <div className="flex items-center gap-3 pl-2 cursor-pointer transition-all" onClick={() => setIsProfileOpen(!isProfileOpen)}>
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-xs font-black text-slate-900 dark:text-[#F2F8FC] leading-none select-none">{user.username}</p>
+                                </div>
+                                <div className="h-9 w-9 rounded-full bg-primary/20 border-2 border-primary/30 overflow-hidden cursor-pointer select-none">
+                                    <img className="h-full w-full object-cover select-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnX1mcWPKB3cgFDOqVOboQPr08Kw0YMm8Jo8LX-JzRADSkOQoilqGWirQm4dE_XH7QLHW65hp3dWY3MbaQz8_yU8z1w2hUABCy32gU7mEDmUtdZsszs2ZDhDJZmvzh4OsHSSAJ_xHT-oBy7s7G9x8lkiuPPGfJPScLUNc3IVKQoyVTTks-f3ffM9duUVZWY_4rswPpHMTJRV8eqTcA2XMhHsVneKJihSlVtBo0Ll35cnYkCDfBbmcBSG5tAkqjQvP1bIF47EcJnUoJ" alt="Profile avatar" draggable="false" />
+                                </div>
                             </div>
-                            <div className="h-9 w-9 rounded-full bg-primary/20 border-2 border-primary/30 overflow-hidden cursor-pointer select-none">
-                                <img className="h-full w-full object-cover select-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnX1mcWPKB3cgFDOqVOboQPr08Kw0YMm8Jo8LX-JzRADSkOQoilqGWirQm4dE_XH7QLHW65hp3dWY3MbaQz8_yU8z1w2hUABCy32gU7mEDmUtdZsszs2ZDhDJZmvzh4OsHSSAJ_xHT-oBy7s7G9x8lkiuPPGfJPScLUNc3IVKQoyVTTks-f3ffM9duUVZWY_4rswPpHMTJRV8eqTcA2XMhHsVneKJihSlVtBo0Ll35cnYkCDfBbmcBSG5tAkqjQvP1bIF47EcJnUoJ" alt="Profile avatar" draggable="false" />
-                            </div>
-                        </div>
+                        ) : (
+                            <button
+                                onClick={() => setActivePage('login')}
+                                className="px-5 py-2 bg-primary text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                            >
+                                Sign In
+                            </button>
+                        )}
 
-                        {shouldRenderProfile && (
+                        {shouldRenderProfile && user && (
                             <div className={`absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 py-2 origin-top-right ${isProfileOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
                                 <button
                                     onClick={() => { setActivePage('profile-orders'); setIsProfileOpen(false); }}
-                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
                                 >
                                     My Orders
                                 </button>
                                 <button
                                     onClick={() => { setActivePage('profile-settings'); setIsProfileOpen(false); }}
-                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
                                 >
                                     Account Settings
                                 </button>
                                 <div className="border-t border-slate-100 dark:border-slate-700 my-1"></div>
-                                <button className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-medium text-red-500 cursor-pointer">
+                                <button 
+                                    onClick={() => { logout(); setIsProfileOpen(false); }}
+                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-red-500 cursor-pointer"
+                                >
                                     Logout
                                 </button>
                             </div>
