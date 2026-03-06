@@ -39,14 +39,12 @@ public class DataInitializer implements CommandLineRunner {
                                 "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80"));
 
                 // Home
-                products.add(createProduct("Espresso Machine", 189.90, 10, "Home",
-                                "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?auto=format&fit=crop&w=800&q=80"));
-                products.add(createProduct("Air Fryer Pro", 129.99, 20, "Home",
-                                "https://images.unsplash.com/photo-1584286595398-a59f21d313f5?auto=format&fit=crop&w=800&q=80"));
+                products.add(createProduct("Espresso Machine", 189.90, 10, "Home", "/products/espresso_machine.png"));
+                products.add(createProduct("Air Fryer Pro", 129.99, 20, "Home", "/products/air_fryer.png"));
                 products.add(createProduct("Cordless Vacuum", 299.00, 15, "Home", "/products/vacuum.png"));
                 products.add(createProduct("Cast Iron Skillet", 45.00, 40, "Home", "/products/skillet.png"));
                 products.add(createProduct("Electric Kettle", 35.50, 50, "Home",
-                                "https://images.unsplash.com/photo-1594212699903-ec8a3eea50f5?auto=format&fit=crop&w=800&q=80"));
+                                "/products/electric_kettle.png"));
 
                 // Fashion
                 products.add(createProduct("Classic Leather Jacket", 199.00, 15, "Fashion",
@@ -67,7 +65,7 @@ public class DataInitializer implements CommandLineRunner {
                 products.add(createProduct("Minimalist Wallet", 45.00, 40, "Accessories",
                                 "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=800&q=80"));
                 products.add(createProduct("Silk Patterned Scarf", 65.00, 15, "Accessories",
-                                "https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?auto=format&fit=crop&w=800&q=80"));
+                                "/products/silk_scarf.png"));
                 products.add(createProduct("Minimalist Backpack", 89.00, 20, "Accessories", "/products/backpack.png"));
 
                 // Wellness
@@ -82,14 +80,14 @@ public class DataInitializer implements CommandLineRunner {
 
                 // Lifestyle
                 products.add(createProduct("Leather Journal", 25.00, 100, "Lifestyle",
-                                "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80"));
+                                "/products/leather_journal.png"));
                 products.add(createProduct("Handmade Ceramic Mug", 18.00, 60, "Lifestyle",
-                                "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=800&q=80"));
+                                "/products/ceramic_mug.png"));
                 products.add(createProduct("Organic Tea Set", 30.00, 45, "Lifestyle", "/products/tea_set.png"));
                 products.add(createProduct("Eco Friendly Tote Bag", 15.00, 200, "Lifestyle",
-                                "https://images.unsplash.com/photo-1559563458-527698bf52ec?auto=format&fit=crop&w=800&q=80"));
+                                "/products/tote_bag.png"));
                 products.add(createProduct("Luxury Candle Soy Wax", 22.00, 80, "Lifestyle",
-                                "https://images.unsplash.com/photo-1534073828943-f801091bb18c?auto=format&fit=crop&w=800&q=80"));
+                                "/products/soy_candle.png"));
 
                 productRepository.saveAll(products);
                 log.info("Database initialized with {} products.", products.size());
