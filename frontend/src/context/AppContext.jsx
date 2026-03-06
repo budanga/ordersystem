@@ -24,55 +24,43 @@ export function AppProvider({ children }) {
     const [cart, setCart] = useState([]);
 
     // Notifications State
-    const [notifications, setNotifications] = useState([
-        {
-            id: 5,
-            type: 'order_success',
-            text: 'Your order #12345 has been confirmed! We are now preparing your package for shipment.',
-            date: '2 min ago',
-            read: false,
-            cleared: false
-        },
-        {
-            id: 4,
-            type: 'order_cancelled',
-            text: 'Order #12340 cancelled: Out of stock.',
-            date: '1 hour ago',
-            read: false,
-            cleared: false
-        },
-        {
-            id: 3,
-            type: 'low_stock',
-            text: 'Limited stock! Items in your cart might sell out soon.',
-            date: '3 hours ago',
-            read: false,
-            cleared: false
-        },
-        {
-            id: 2,
-            type: 'special_offer',
-            text: 'Flash Sale: 30% off on all winter categories!',
-            date: '5 hours ago',
-            read: true,
-            cleared: false
-        },
-        {
-            id: 1,
-            type: 'new_products',
-            text: 'Check out the new Premium Collection.',
-            date: '1 day ago',
-            read: true,
-            cleared: false
-        }
-    ]);
+    const [notifications, setNotifications] = useState([]);
 
-    const clearDropdownNotifications = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, cleared: true })));
+    const fetchNotifications = async () => {
+        try {
+            const data = await api.get('/notifications');
+            setNotifications(data);
+        } catch (err) {
+            console.error("Error fetching notifications:", err);
+        }
     };
 
-    const markAllNotificationsAsRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    useEffect(() => {
+        fetchNotifications();
+        // Poll for new notifications every 30 seconds
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const clearDropdownNotifications = async () => {
+        try {
+            await api.patch('/notifications/clear-all');
+            setNotifications(prev => prev.map(n => ({ ...n, cleared: true })));
+        } catch (err) {
+            console.error("Error clearing notifications:", err);
+        }
+    };
+
+    const markAllNotificationsAsRead = async () => {
+        const unread = notifications.some(n => !n.read);
+        if (!unread) return;
+
+        try {
+            await api.patch('/notifications/mark-all-read');
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        } catch (err) {
+            console.error("Error marking as read:", err);
+        }
     };
 
     // Categories from Backend
@@ -107,6 +95,29 @@ export function AppProvider({ children }) {
         }));
     };
 
+    const checkout = async () => {
+        if (cart.length === 0) return;
+
+        const orderData = {
+            customerName: "Alex Rivera", // Hardcoded for now
+            totalAmount: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+            orderItems: cart.map(item => ({
+                productName: item.name,
+                quantity: item.quantity
+            }))
+        };
+
+        try {
+            await api.post('/orders', orderData);
+            setCart([]);
+            fetchNotifications(); // Update notifications to show success message
+            return true;
+        } catch (err) {
+            console.error("Checkout failed:", err);
+            return false;
+        }
+    };
+
     const resetFilters = () => {
         setSearchQuery('');
         setSelectedCategory('');
@@ -114,6 +125,21 @@ export function AppProvider({ children }) {
         setInStockOnly(false);
         setSortBy('name,asc');
         setCurrentPage(0);
+    };
+    const formatTimeAgo = (dateString) => {
+        const now = new Date();
+        const past = new Date(dateString);
+        const diffInMs = now - past;
+        const diffInSec = Math.floor(diffInMs / 1000);
+        const diffInMin = Math.floor(diffInSec / 60);
+        const diffInHour = Math.floor(diffInMin / 60);
+        const diffInDay = Math.floor(diffInHour / 24);
+
+        if (diffInSec < 60) return 'Just now';
+        if (diffInMin < 60) return `${diffInMin}m ago`;
+        if (diffInHour < 24) return `${diffInHour}h ago`;
+        if (diffInDay < 7) return `${diffInDay}d ago`;
+        return past.toLocaleDateString();
     };
 
     return (
@@ -130,7 +156,8 @@ export function AppProvider({ children }) {
             cart, addToCart, removeFromCart, updateCartQuantity,
             resetFilters,
             categories,
-            notifications, setNotifications, clearDropdownNotifications, markAllNotificationsAsRead,
+            notifications, setNotifications, clearDropdownNotifications, markAllNotificationsAsRead, formatTimeAgo,
+            checkout
         }}>
             {children}
         </AppContext.Provider>

@@ -49,7 +49,37 @@ export function Home() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            {/* Full width All category banner */}
+            <div className="mb-8 px-4 md:px-0">
+                <div
+                    onClick={() => handleCategoryClick('')}
+                    className="w-full group relative h-[300px] md:h-[450px] rounded-3xl overflow-hidden cursor-pointer bg-slate-100 dark:bg-slate-800 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 animate-dropdown"
+                    style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+                >
+                    <div
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
+                        style={{
+                            backgroundImage: `linear-gradient(to top, rgba(18, 18, 18, 0.8), rgba(18, 18, 18, 0.2)), url("https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=2070")`
+                        }}
+                    />
+
+                    <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+                        <span className="text-white text-xs font-bold tracking-[0.4em] uppercase mb-3 text-center">Shop the complete collection</span>
+                        <div className="w-12 h-1 bg-primary rounded-full shadow-[0_0_15px_rgba(242,115,36,0.5)]"></div>
+                    </div>
+
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="text-center">
+                            <h3 className="text-white text-5xl lg:text-8xl font-extralight tracking-[0.3em] uppercase mb-2 drop-shadow-2xl">
+                                All
+                            </h3>
+                            <div className="h-px w-0 group-hover:w-full bg-white/30 transition-all duration-700 mx-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 px-4 md:px-0">
                 {(() => {
                     let cols = 1;
                     if (typeof window !== 'undefined') {
@@ -91,7 +121,7 @@ export function Home() {
                                 key={category.name}
                                 onClick={() => handleCategoryClick(category.name)}
                                 className={`group relative ${isFirstInRow ^ isEvenRow ? 'aspect-[4/3]' : 'aspect-square'} md:aspect-auto md:h-[500px] rounded-3xl overflow-hidden cursor-pointer bg-slate-100 dark:bg-slate-800 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 animate-dropdown ${colSpan}`}
-                                style={{ animationDelay: `${delayIndex * 100}ms`, animationFillMode: 'both' }}
+                                style={{ animationDelay: `${(delayIndex + 1) * 100}ms`, animationFillMode: 'both' }}
                             >
                                 <div
                                     className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"

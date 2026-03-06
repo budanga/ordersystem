@@ -1,22 +1,31 @@
 import { useAppContext } from '../context/AppContext';
+import api from '../api';
 
 export function Profile({ initialTab = 'profile-orders' }) {
-    const { notifications, setNotifications, setActivePage } = useAppContext();
+    const { notifications, setNotifications, setActivePage, formatTimeAgo } = useAppContext();
     const currentTab = initialTab;
 
     const notificationConfigs = {
-        order_success: { icon: 'check_circle', color: 'text-green-500', bg: 'bg-green-500/10', label: 'Order Confirmed' },
-        order_cancelled: { icon: 'cancel', color: 'text-red-500', bg: 'bg-red-500/10', label: 'Order Cancelled' },
-        order_completed: { icon: 'verified', color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Order Completed' },
-        abandoned_cart: { icon: 'shopping_cart_off', color: 'text-orange-500', bg: 'bg-orange-500/10', label: 'Abandoned Cart' },
-        low_stock: { icon: 'warning', color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Low Stock Alert' },
-        new_products: { icon: 'new_releases', color: 'text-indigo-500', bg: 'bg-indigo-500/10', label: 'New Arrival' },
-        special_offer: { icon: 'local_offer', color: 'text-pink-500', bg: 'bg-pink-500/10', label: 'Special Offer' }
+        ORDER_SUCCESS: { icon: 'check_circle', color: 'text-green-500', bg: 'bg-green-500/10', label: 'Order Confirmed' },
+        ORDER_CANCELLED: { icon: 'cancel', color: 'text-red-500', bg: 'bg-red-500/10', label: 'Order Cancelled' },
+        ORDER_COMPLETED: { icon: 'verified', color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Order Completed' },
+        ABANDONED_CART: { icon: 'shopping_cart_off', color: 'text-orange-500', bg: 'bg-orange-500/10', label: 'Abandoned Cart' },
+        LOW_STOCK: { icon: 'warning', color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Low Stock Alert' },
+        NEW_PRODUCTS: { icon: 'new_releases', color: 'text-indigo-500', bg: 'bg-indigo-500/10', label: 'New Arrival' },
+        SPECIAL_OFFER: { icon: 'local_offer', color: 'text-pink-500', bg: 'bg-pink-500/10', label: 'Special Offer' }
     };
 
-    const markAsRead = (id) => {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    const markAsRead = async (id) => {
+        try {
+            await api.patch(`/notifications/${id}/read`);
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        } catch (err) {
+            console.error("Error marking notification as read:", err);
+        }
     };
+
+    // Need to import api if it's not available, but useAppContext might already have it if we expose it, 
+    // or we can import it directly. Profile.jsx doesn't import api yet.
 
     return (
         <div className="max-w-4xl mx-auto px-6 py-12">
@@ -87,8 +96,8 @@ export function Profile({ initialTab = 'profile-orders' }) {
                                                         <span className={`text-[10px] uppercase font-black tracking-wider ${config.color}`}>
                                                             {config.label}
                                                         </span>
-                                                        <span className="text-[11px] text-slate-400 font-medium">
-                                                            {notif.date}
+                                                        <span className="text-[11px] text-slate-400 font-medium" title={new Date(notif.createdAt).toLocaleString()}>
+                                                            {formatTimeAgo(notif.createdAt)}
                                                         </span>
                                                     </div>
                                                     <p className={`text-sm mt-0.5 text-slate-800 dark:text-slate-200 ${!notif.read ? 'font-bold' : 'font-medium'}`}>
