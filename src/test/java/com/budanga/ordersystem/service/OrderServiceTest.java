@@ -7,6 +7,7 @@ import com.budanga.ordersystem.dto.UpdateOrderDTO;
 import com.budanga.ordersystem.entity.Order;
 import com.budanga.ordersystem.entity.OrderItem;
 import com.budanga.ordersystem.entity.Product;
+import com.budanga.ordersystem.entity.User;
 import com.budanga.ordersystem.exception.ResourceNotFoundException;
 import com.budanga.ordersystem.repository.OrderRepository;
 import com.budanga.ordersystem.repository.ProductRepository;
@@ -42,14 +43,22 @@ class OrderServiceTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     private OrderService orderService;
+
+    private User testUser;
 
     private final com.budanga.ordersystem.mapper.OrderMapper orderMapper = org.mapstruct.factory.Mappers
             .getMapper(com.budanga.ordersystem.mapper.OrderMapper.class);
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        orderService = new OrderService(orderRepository, productRepository, orderMapper);
+        orderService = new OrderService(orderRepository, productRepository, orderMapper, notificationService);
+        testUser = new User();
+        testUser.setId(1L);
+        testUser.setUsername("testuser");
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────
@@ -102,7 +111,7 @@ class OrderServiceTest {
             dto.setCustomerName("Alice");
             dto.setOrderItems(List.of(new OrderItemDTO("Widget", null, 2, null)));
 
-            OrderDTO result = orderService.createOrder(dto);
+            OrderDTO result = orderService.createOrder(dto, testUser);
 
             // Stock decremented
             assertThat(product.getStock()).isEqualTo(3);
@@ -128,7 +137,7 @@ class OrderServiceTest {
             dto.setCustomerName("Bob");
             dto.setOrderItems(List.of(new OrderItemDTO("Ghost", null, 1, null)));
 
-            assertThatThrownBy(() -> orderService.createOrder(dto))
+            assertThatThrownBy(() -> orderService.createOrder(dto, testUser))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Ghost");
 
@@ -145,7 +154,7 @@ class OrderServiceTest {
             dto.setCustomerName("Carol");
             dto.setOrderItems(List.of(new OrderItemDTO("Widget", null, 5, null)));
 
-            assertThatThrownBy(() -> orderService.createOrder(dto))
+            assertThatThrownBy(() -> orderService.createOrder(dto, testUser))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Widget");
 
@@ -172,7 +181,7 @@ class OrderServiceTest {
                     new OrderItemDTO("Banana", null, 2, null) // 2 * 2.00 = 4.00
             ));
 
-            orderService.createOrder(dto);
+            orderService.createOrder(dto, testUser);
 
             ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
             verify(orderRepository).save(captor.capture());
@@ -196,7 +205,7 @@ class OrderServiceTest {
             when(orderRepository.save(any())).thenReturn(order);
 
             UpdateOrderDTO dto = new UpdateOrderDTO(true);
-            OrderDTO result = orderService.updateOrder(1L, dto);
+            OrderDTO result = orderService.updateOrder(1L, dto, testUser);
 
             assertThat(order.getCompleted()).isTrue();
             assertThat(result).isNotNull();
@@ -208,7 +217,7 @@ class OrderServiceTest {
         void notFound() {
             when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> orderService.updateOrder(99L, new UpdateOrderDTO()))
+            assertThatThrownBy(() -> orderService.updateOrder(99L, new UpdateOrderDTO(), testUser))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }
@@ -225,7 +234,7 @@ class OrderServiceTest {
             Order order = makeOrder(1L, "Alice", BigDecimal.TEN, false);
             when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-            orderService.deleteOrder(1L);
+            orderService.deleteOrder(1L, testUser);
 
             verify(orderRepository).delete(order);
         }
@@ -236,7 +245,7 @@ class OrderServiceTest {
             Order order = makeOrder(1L, "Alice", BigDecimal.TEN, true);
             when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-            assertThatThrownBy(() -> orderService.deleteOrder(1L))
+            assertThatThrownBy(() -> orderService.deleteOrder(1L, testUser))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Completed orders cannot be deleted");
 
@@ -248,7 +257,7 @@ class OrderServiceTest {
         void notFound() {
             when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> orderService.deleteOrder(99L))
+            assertThatThrownBy(() -> orderService.deleteOrder(99L, testUser))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }
@@ -343,7 +352,7 @@ class OrderServiceTest {
             when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
             when(orderRepository.save(any())).thenReturn(order);
 
-            OrderDTO result = orderService.markAsCompleted(1L);
+            OrderDTO result = orderService.markAsCompleted(1L, testUser);
 
             assertThat(order.getCompleted()).isTrue();
             assertThat(result).isNotNull();
@@ -354,7 +363,7 @@ class OrderServiceTest {
         void markAsCompleted_notFound() {
             when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> orderService.markAsCompleted(99L))
+            assertThatThrownBy(() -> orderService.markAsCompleted(99L, testUser))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
 
@@ -365,7 +374,7 @@ class OrderServiceTest {
             when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
             when(orderRepository.save(any())).thenReturn(order);
 
-            OrderDTO result = orderService.markAsUncompleted(1L);
+            OrderDTO result = orderService.markAsUncompleted(1L, testUser);
 
             assertThat(order.getCompleted()).isFalse();
             assertThat(result).isNotNull();
@@ -376,7 +385,7 @@ class OrderServiceTest {
         void markAsUncompleted_notFound() {
             when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> orderService.markAsUncompleted(99L))
+            assertThatThrownBy(() -> orderService.markAsUncompleted(99L, testUser))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }
