@@ -381,19 +381,7 @@ export function Navbar() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="p-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
-                                    <button
-                                        onClick={() => {
-                                            if (!user) setActivePage('login');
-                                            else setActivePage('profile-notifications');
-                                            setIsNotifOpen(false);
-                                        }}
-                                        className="w-full py-2 flex items-center justify-center gap-2 text-primary font-bold text-sm hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
-                                    >
-                                        See all notifications
-                                        <span className="material-symbols-outlined text-[18px]">keyboard_double_arrow_right</span>
-                                    </button>
-                                </div>
+                                
                             </div>
                         )}
                     </div>
@@ -422,22 +410,32 @@ export function Navbar() {
                         {shouldRenderProfile && user && (
                             <div className={`absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 py-2 origin-top-right ${isProfileOpen ? 'animate-dropdown' : 'animate-dropdown-out'}`}>
                                 <button
-                                    onClick={() => { setActivePage('profile-orders'); setIsProfileOpen(false); }}
-                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                                    onClick={() => { setActivePage('profile-details'); setIsProfileOpen(false); }}
+                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-2"
                                 >
-                                    My Orders
+                                    <span className="material-symbols-outlined text-[18px]">person</span>
+                                    Profile Details
+                                </button>
+                                <button
+                                    onClick={() => { setActivePage('profile-orders'); setIsProfileOpen(false); }}
+                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">history</span>
+                                    Order History
                                 </button>
                                 <button
                                     onClick={() => { setActivePage('profile-settings'); setIsProfileOpen(false); }}
-                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-2"
                                 >
-                                    Account Settings
+                                    <span className="material-symbols-outlined text-[18px]">settings</span>
+                                    Settings
                                 </button>
                                 <div className="border-t border-slate-100 dark:border-slate-700 my-1"></div>
                                 <button 
                                     onClick={() => { logout(); setIsProfileOpen(false); }}
-                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-red-500 cursor-pointer"
+                                    className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-sm font-bold text-red-500 cursor-pointer flex items-center gap-2"
                                 >
+                                    <span className="material-symbols-outlined text-[18px]">logout</span>
                                     Logout
                                 </button>
                             </div>

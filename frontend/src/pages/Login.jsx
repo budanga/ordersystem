@@ -20,46 +20,12 @@ export function Login() {
     };
 
     return (
-        <div className="min-h-[80vh] flex items-center justify-center px-6">
-            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in">
-                
-                {/* Visual Side */}
-                <div className="hidden lg:block relative overflow-hidden bg-primary p-12 flex flex-col justify-between">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#D9631B] opacity-90"></div>
-                    <div className="absolute -top-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-black/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-                    
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-10 cursor-pointer group" onClick={() => setActivePage('home')}>
-                            <div className="bg-white p-1.5 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-white/20">
-                                <span className="material-symbols-outlined text-primary text-[20px] block">diamond</span>
-                            </div>
-                            <h2 className="text-xl font-bold text-white tracking-tight select-none">Budal</h2>
-                        </div>
-                        <h3 className="text-5xl font-black text-white leading-tight mb-6 tracking-tighter">
-                            Elevate your <br />shopping <br />experience.
-                        </h3>
-                        <p className="text-white/80 text-lg font-medium max-w-md">
-                            Join thousands of users who trust Budal for the most premium products and exclusive deals.
-                        </p>
-                    </div>
-
-                    <div className="relative z-10 flex items-center gap-12">
-                        <div>
-                            <p className="text-3xl font-black text-white">50k+</p>
-                            <p className="text-xs font-bold text-white/60 uppercase tracking-widest">Active Users</p>
-                        </div>
-                        <div className="w-px h-10 bg-white/20"></div>
-                        <div>
-                            <p className="text-3xl font-black text-white">4.9/5</p>
-                            <p className="text-xs font-bold text-white/60 uppercase tracking-widest">App Rating</p>
-                        </div>
-                    </div>
-                </div>
+        <div className="min-h-[80vh] flex items-center justify-center px-6 py-12">
+            <div className="w-full max-w-6xl lg:min-h-[850px] grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in">
 
                 {/* Form Side */}
-                <div className="p-8 md:p-16 flex flex-col justify-center">
-                    <div className="max-w-md mx-auto w-full">
+                <div className="p-8 md:p-12 flex flex-col justify-center order-2 lg:order-1">
+                    <div className="max-w-xl mx-auto w-full">
                         <div className="mb-10 text-center lg:text-left">
                             <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter mb-2">Welcome Back!</h1>
                             <p className="text-slate-500 dark:text-slate-400 font-bold">Please enter your details to sign in.</p>
@@ -82,6 +48,11 @@ export function Login() {
                                         required
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
+                                        onFocus={(e) => {
+                                            const val = e.target.value;
+                                            e.target.value = '';
+                                            e.target.value = val;
+                                        }}
                                         placeholder="Enter your username"
                                         className="w-full h-14 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
                                     />
@@ -100,6 +71,11 @@ export function Login() {
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
+                                        onFocus={(e) => {
+                                            const val = e.target.value;
+                                            e.target.value = '';
+                                            e.target.value = val;
+                                        }}
                                         placeholder="••••••••"
                                         className="w-full h-14 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
                                     />
@@ -119,10 +95,7 @@ export function Login() {
                                 {loading ? (
                                     <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 ) : (
-                                    <>
-                                        <span>Sign In</span>
-                                        <span className="material-symbols-outlined text-[20px]">login</span>
-                                    </>
+                                    <span>Sign In</span>
                                 )}
                             </button>
                         </form>
@@ -133,14 +106,10 @@ export function Login() {
                             <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800"></div>
                         </div>
 
-                        <div className="mt-8 grid grid-cols-2 gap-4">
-                            <button className="h-14 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer">
+                        <div className="mt-8">
+                            <button className="w-full h-14 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer">
                                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="size-5" alt="Google" />
-                                <span className="text-sm font-black text-slate-700 dark:text-slate-300">Google</span>
-                            </button>
-                            <button className="h-14 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer">
-                                <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" className="size-5" alt="Apple" />
-                                <span className="text-sm font-black text-slate-700 dark:text-slate-300">Facebook</span>
+                                <span className="text-sm font-black text-slate-700 dark:text-slate-300">Continue with Google</span>
                             </button>
                         </div>
 
@@ -148,6 +117,36 @@ export function Login() {
                             Don't have an account?{' '}
                             <button onClick={() => setActivePage('register')} className="text-primary hover:underline font-black cursor-pointer">Create Account</button>
                         </p>
+                    </div>
+                </div>
+
+                {/* Visual Side */}
+                <div className="hidden lg:block relative overflow-hidden bg-slate-950 p-12 flex flex-col justify-between order-1 lg:order-2">
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-primary/20 opacity-60"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-pulse"></div>
+
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-10 cursor-pointer group" onClick={() => setActivePage('home')}>
+                            <div className="bg-primary p-1.5 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/30">
+                                <span className="material-symbols-outlined text-white text-[20px] block">diamond</span>
+                            </div>
+                            <h2 className="text-xl font-bold text-white tracking-tight select-none">Budal</h2>
+                        </div>
+                        <h3 className="text-5xl font-black text-white leading-tight mb-6 tracking-tighter">
+                            Elevate your <br />shopping <br />experience.
+                        </h3>
+                    </div>
+
+                    <div className="relative z-10 flex items-center gap-12 mt-12 pb-4">
+                        <div>
+                            <p className="text-3xl font-black text-white/90">50k+</p>
+                            <p className="text-xs font-bold text-white/30 uppercase tracking-widest">Active Users</p>
+                        </div>
+                        <div className="w-px h-10 bg-white/10"></div>
+                        <div>
+                            <p className="text-3xl font-black text-white/90">4.9/5</p>
+                            <p className="text-xs font-bold text-white/30 uppercase tracking-widest">App Rating</p>
+                        </div>
                     </div>
                 </div>
             </div>

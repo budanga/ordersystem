@@ -39,7 +39,7 @@ export function Register() {
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center px-6 py-12">
-            <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in">
+            <div className="w-full max-w-6xl lg:min-h-[850px] grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-fade-in">
                 
                 {/* Form Side */}
                 <div className="p-8 md:p-12 flex flex-col justify-center order-2 lg:order-1">
@@ -68,6 +68,11 @@ export function Register() {
                                             required
                                             value={formData.username}
                                             onChange={handleChange}
+                                            onFocus={(e) => {
+                                                const val = e.target.value;
+                                                e.target.value = '';
+                                                e.target.value = val;
+                                            }}
                                             placeholder="Pick a username"
                                             className="w-full h-12 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
                                         />
@@ -83,6 +88,11 @@ export function Register() {
                                             required
                                             value={formData.email}
                                             onChange={handleChange}
+                                            onFocus={(e) => {
+                                                const val = e.target.value;
+                                                e.target.value = '';
+                                                e.target.value = val;
+                                            }}
                                             placeholder="your@email.com"
                                             className="w-full h-12 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
                                         />
@@ -101,6 +111,11 @@ export function Register() {
                                             required
                                             value={formData.firstName}
                                             onChange={handleChange}
+                                            onFocus={(e) => {
+                                                const val = e.target.value;
+                                                e.target.value = '';
+                                                e.target.value = val;
+                                            }}
                                             placeholder="John"
                                             className="w-full h-12 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
                                         />
@@ -116,6 +131,11 @@ export function Register() {
                                             required
                                             value={formData.lastName}
                                             onChange={handleChange}
+                                            onFocus={(e) => {
+                                                const val = e.target.value;
+                                                e.target.value = '';
+                                                e.target.value = val;
+                                            }}
                                             placeholder="Doe"
                                             className="w-full h-12 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
                                         />
@@ -133,26 +153,37 @@ export function Register() {
                                         required
                                         value={formData.phoneNumber}
                                         onChange={handleChange}
+                                        onFocus={(e) => {
+                                            const val = e.target.value;
+                                            e.target.value = '';
+                                            e.target.value = val;
+                                        }}
                                         placeholder="+1 (555) 000-0000"
                                         className="w-full h-12 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Address</label>
-                                <div className="relative group">
-                                    <span className="material-symbols-outlined absolute left-4 top-10 text-slate-400 group-focus-within:text-primary transition-colors">location_on</span>
-                                    <textarea
-                                        name="address"
-                                        required
-                                        value={formData.address}
-                                        onChange={handleChange}
-                                        placeholder="123 Street Name, City, Country"
-                                        className="w-full min-h-[80px] py-3 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all resize-none"
-                                    />
+                                <div className="space-y-2">
+                                    <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Address</label>
+                                    <div className="relative group">
+                                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">location_on</span>
+                                        <input
+                                            name="address"
+                                            type="text"
+                                            required
+                                            value={formData.address}
+                                            onChange={handleChange}
+                                            onFocus={(e) => {
+                                                const val = e.target.value;
+                                                e.target.value = '';
+                                                e.target.value = val;
+                                            }}
+                                            placeholder="123 Street Name, City, Country"
+                                            className="w-full h-12 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -165,6 +196,11 @@ export function Register() {
                                             required
                                             value={formData.password}
                                             onChange={handleChange}
+                                            onFocus={(e) => {
+                                                const val = e.target.value;
+                                                e.target.value = '';
+                                                e.target.value = val;
+                                            }}
                                             placeholder="••••••••"
                                             className="w-full h-12 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
                                         />
@@ -180,6 +216,11 @@ export function Register() {
                                             required
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
+                                            onFocus={(e) => {
+                                                const val = e.target.value;
+                                                e.target.value = '';
+                                                e.target.value = val;
+                                            }}
                                             placeholder="••••••••"
                                             className="w-full h-12 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 rounded-2xl pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all"
                                         />
@@ -200,10 +241,7 @@ export function Register() {
                                 {loading ? (
                                     <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 ) : (
-                                    <>
-                                        <span>Create Account</span>
-                                        <span className="material-symbols-outlined text-[20px]">person_add</span>
-                                    </>
+                                    <span>Create Account</span>
                                 )}
                             </button>
                         </form>
@@ -235,7 +273,7 @@ export function Register() {
                         </p>
                     </div>
 
-                    <div className="relative z-10 flex items-center justify-end gap-12">
+                    <div className="relative z-10 flex items-center justify-end gap-12 mt-12 pb-4">
                         <div className="text-right">
                             <p className="text-3xl font-black text-white">24/7</p>
                             <p className="text-xs font-bold text-white/40 uppercase tracking-widest">Support Team</p>
