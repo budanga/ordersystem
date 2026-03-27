@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="22" fill="#F27324" />
+  <!-- Mathematically Correct Parallel Facets Diamond -->
+  <!-- Outer Outline -->
+  <path d="M26 22 H74 L90 45 L50 88 L10 45 Z" fill="none" stroke="white" stroke-width="9" stroke-linejoin="round" />
+  <!-- Girdle horizontal -->
+  <path d="M10 45 H90" stroke="white" stroke-width="8" />
+  <!-- Parallel Crown facets: internal lines following the exact slant of the outer side edges -->
+  <!-- Left Side slant is (26,22)->(10,45), inner slice starts at 46 and ends at 30 -->
+  <path d="M44 22 L28 45 M56 22 L72 45" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" />
+  <!-- Lower Pavilion vertical -->
+  <path d="M50 45 V88" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" />
+</svg>
