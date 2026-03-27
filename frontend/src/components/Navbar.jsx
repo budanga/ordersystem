@@ -65,14 +65,25 @@ export function Navbar() {
             setShouldRenderCart(true);
             setIsNotifOpen(false);
             setIsProfileOpen(false);
+            
+            // Prevent layout shift: calculate scrollbar width before hiding overflow
+            const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
             document.body.style.overflow = 'hidden';
+            if (scrollBarWidth > 0) {
+                document.body.style.paddingRight = `${scrollBarWidth}px`;
+            }
+
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => setIsCartVisible(true));
             });
         } else {
             setIsCartVisible(false);
-            document.body.style.overflow = '';
-            const timer = setTimeout(() => setShouldRenderCart(false), 300);
+            // Restore overflow and padding after the transition completes
+            const timer = setTimeout(() => {
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                setShouldRenderCart(false);
+            }, 300);
             return () => clearTimeout(timer);
         }
     }, [isCartOpen]);
@@ -194,6 +205,7 @@ export function Navbar() {
                                     onClick={(e) => { e.stopPropagation(); setIsCartOpen(false); }}
                                 ></div>
                                 <aside 
+                                    onClick={(e) => e.stopPropagation()}
                                     className={`fixed right-0 top-0 bottom-0 w-full sm:w-[480px] z-[101] bg-white dark:bg-[#101622]/90 backdrop-blur-xl border-l border-slate-200 dark:border-white/5 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${isCartVisible ? 'translate-x-0' : 'translate-x-full'}`}
                                 >
                                     <div className="p-8 flex items-center justify-between border-b border-slate-100 dark:border-white/5">
@@ -204,9 +216,9 @@ export function Navbar() {
                                         </div>
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); setIsCartOpen(false); }} 
-                                            className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer text-slate-500 dark:text-slate-400"
+                                            className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-all duration-300 cursor-pointer text-slate-500 dark:text-slate-400 active:scale-95"
                                         >
-                                            <span className="material-symbols-outlined">close</span>
+                                            <span className="material-symbols-outlined text-[20px]">close</span>
                                         </button>
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-6 space-y-4">

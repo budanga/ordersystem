@@ -9,6 +9,7 @@
 
 body {
     @apply bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-[#F2F8FC] antialiased;
+    scrollbar-gutter: stable;
 }
 
 .material-symbols-outlined {
